@@ -5,26 +5,10 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   Container,
-  Stack,
 } from "@mui/material";
-import {
-  Logout,
-  AccountBalance,
-  PersonAdd,
-  History,
-  Description,
-} from "@mui/icons-material";
 
 const DashboardLayout = ({ children }) => {
-  const menuItems = [
-    { text: "Customer Entry", icon: <PersonAdd fontSize="small" /> },
-    { text: "Financial Summary", icon: <AccountBalance fontSize="small" /> },
-    { text: "Transactions", icon: <History fontSize="small" /> },
-    { text: "Documents", icon: <Description fontSize="small" /> },
-  ];
-
   return (
     <Box
       sx={{
@@ -36,61 +20,76 @@ const DashboardLayout = ({ children }) => {
     >
       <CssBaseline />
 
-      {/* Top Blue Header */}
-      <AppBar position="static" sx={{ bgcolor: "#004c8f", boxShadow: "none" }}>
-        <Container maxWidth="xl">
-          <Toolbar sx={{ justifyContent: "space-between", px: "0 !important" }}>
-            <Typography
-              variant="h5"
-              sx={{ fontWeight: "bold", letterSpacing: 1 }}
-            >
-              SHREE INVESTMENT
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Welcome, Admin
+      {/* Top Blue Header - Focused on Branding only */}
+      <AppBar
+        position="sticky"
+        sx={{
+          bgcolor: "#ffffff",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          borderBottom: "1px solid #e2e8f0",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Toolbar sx={{ justifyContent: "space-between", py: 1 }}>
+            {/* Logo Section */}
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  letterSpacing: -0.5,
+                  color: "#004c8f", // Classic Blue Logo
+                  fontFamily: "'Public Sans', sans-serif",
+                }}
+              >
+                SHREE<span style={{ color: "#ff8c00" }}> INVESTMENT</span>
               </Typography>
-              <Button startIcon={<Logout />} color="inherit" size="small">
-                Logout
-              </Button>
-            </Stack>
+            </Box>
+
+            {/* Application Title - Right Side (Subtle) */}
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
+            >
+              Digital Onboarding
+            </Typography>
           </Toolbar>
         </Container>
       </AppBar>
 
-      {/* Secondary Menu Bar (HDFC Style) */}
-      <Box sx={{ bgcolor: "#003366", color: "white", mb: 3 }}>
+      {/* Sub-header for Application Title */}
+      <Box sx={{ bgcolor: "#003366", color: "white", py: 1.5, mb: 4 }}>
         <Container maxWidth="xl">
-          <Stack direction="row" spacing={1}>
-            {menuItems.map((item) => (
-              <Button
-                key={item.text}
-                startIcon={item.icon}
-                sx={{
-                  color: "white",
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: 0,
-                  textTransform: "none",
-                  fontSize: "0.95rem",
-                  "&:hover": { bgcolor: "#004c8f" },
-                  borderBottom:
-                    item.text === "Customer Entry"
-                      ? "4px solid #ffcc00"
-                      : "none", // Active indicator
-                }}
-              >
-                {item.text}
-              </Button>
-            ))}
-          </Stack>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              textAlign: "center",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
+            }}
+          >
+            Investment Application Form
+          </Typography>
         </Container>
       </Box>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <Container maxWidth="lg" sx={{ flexGrow: 1, pb: 5 }}>
         {children}
       </Container>
+
+      {/* Simple Footer for Professionalism */}
+      <Box sx={{ py: 2, textAlign: "center", bgcolor: "#e0e4e8" }}>
+        <Typography variant="caption" color="textSecondary">
+          © {new Date().getFullYear()} Shree Investment. All Rights Reserved.
+        </Typography>
+      </Box>
     </Box>
   );
 };

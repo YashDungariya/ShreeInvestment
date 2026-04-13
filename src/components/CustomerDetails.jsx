@@ -1,41 +1,33 @@
 import React from "react";
-import { Grid, TextField, Typography, Box, Divider } from "@mui/material";
+import { TextField, Typography, Box, Stack } from "@mui/material";
 
 const CustomerDetails = ({ formData, handleChange }) => {
+  // Label style for professional banking look
   const LabelStyle = {
     fontWeight: "bold",
     color: "#000",
     mb: 1,
     display: "block",
-    fontSize: "0.95rem",
+    fontSize: "0.9rem",
+    textAlign: "left",
   };
 
+  // Modern Flat Input Style with increased width
   const InputStyle = {
     "& .MuiOutlinedInput-root": {
       backgroundColor: "#f5f5f5",
       borderRadius: "4px",
+      fontSize: "1rem",
       "& fieldset": { border: "none" },
       "&.Mui-focused fieldset": { border: "1px solid #004c8f" },
     },
-    mb: 4, // Har input ke baad thoda extra space professional lagta hai
+    width: "100%",
   };
 
   return (
-    <Box sx={{ p: 2, maxWidth: "1000px", mx: "auto" }}>
-      {/* Form Title Section */}
+    <Box sx={{ p: 1, width: "100%" }}>
+      {/* Required Note at Top */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#003366" }}>
-          CUSTOMER PERSONAL DETAILS
-        </Typography>
-        <Divider
-          sx={{
-            mt: 1,
-            mb: 2,
-            width: "100px",
-            height: "3px",
-            bgcolor: "#ff8c00",
-          }}
-        />
         <Typography
           variant="body2"
           sx={{ color: "red", fontStyle: "italic", fontWeight: "bold" }}
@@ -44,13 +36,15 @@ const CustomerDetails = ({ formData, handleChange }) => {
         </Typography>
       </Box>
 
-      {/* Inputs with Increased Width using Grid */}
-      <Grid container spacing={2}>
-        {/* Full width row for important details or two wide columns */}
-        <Grid item xs={12} md={10} lg={8}>
+      {/* Row 1: Name, Mother's Name, Email */}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={3}
+        sx={{ mb: 4, width: "100%" }}
+      >
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Customer Name *</Typography>
           <TextField
-            fullWidth
             placeholder="Enter Full Name"
             name="customerName"
             value={formData.customerName}
@@ -58,12 +52,10 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-
-        <Grid item xs={12} md={10} lg={8}>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Mother's Name *</Typography>
           <TextField
-            fullWidth
             placeholder="Enter Mother's Name"
             name="motherName"
             value={formData.motherName}
@@ -71,12 +63,10 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-
-        <Grid item xs={12} md={10} lg={8}>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Email ID</Typography>
           <TextField
-            fullWidth
             placeholder="email@example.com"
             name="email"
             value={formData.email}
@@ -84,12 +74,45 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
+        </Box>
+      </Stack>
 
-        <Grid item xs={12} md={10} lg={8}>
+      {/* Row 2: Aadhaar Number, PAN Number, Phone Number */}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={3}
+        sx={{ mb: 4, width: "100%" }}
+      >
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
+          <Typography sx={LabelStyle}>Aadhaar Number *</Typography>
+          <TextField
+            placeholder="12 Digit Aadhaar Number"
+            name="aadharNumber"
+            value={formData.aadharNumber}
+            onChange={handleChange}
+            size="small"
+            sx={InputStyle}
+            inputProps={{ maxLength: 12 }}
+          />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
+          <Typography sx={LabelStyle}>PAN Number *</Typography>
+          <TextField
+            placeholder="ABCDE1234F"
+            name="panNumber"
+            value={formData.panNumber}
+            onChange={handleChange}
+            size="small"
+            sx={InputStyle}
+            inputProps={{
+              style: { textTransform: "uppercase" },
+              maxLength: 10,
+            }}
+          />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Phone Number *</Typography>
           <TextField
-            fullWidth
             placeholder="Phone Number"
             name="phone"
             value={formData.phone}
@@ -97,12 +120,18 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
+        </Box>
+      </Stack>
 
-        <Grid item xs={12} md={10} lg={8}>
+      {/* Row 3: Birth Place & Notes */}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={3}
+        sx={{ mb: 4, width: "100%" }}
+      >
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Birth Place</Typography>
           <TextField
-            fullWidth
             placeholder="City / State"
             name="birthPlace"
             value={formData.birthPlace}
@@ -110,12 +139,10 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-
-        <Grid item xs={12} md={10} lg={8}>
+        </Box>
+        <Box sx={{ flex: 2, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Dynamic Notes</Typography>
           <TextField
-            fullWidth
             multiline
             rows={1}
             placeholder="Enter additional information here..."
@@ -125,8 +152,8 @@ const CustomerDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Stack>
     </Box>
   );
 };

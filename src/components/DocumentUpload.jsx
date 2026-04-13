@@ -1,8 +1,9 @@
 import React from "react";
-import { Grid, Typography, Box, Button } from "@mui/material";
+import { Typography, Box, Button, Stack } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const DocumentUpload = ({ handleFileChange, files }) => {
+  // Label style consistent with other forms
   const LabelStyle = {
     fontWeight: "bold",
     color: "#000",
@@ -11,120 +12,171 @@ const DocumentUpload = ({ handleFileChange, files }) => {
     fontSize: "0.9rem",
   };
 
+  // Small, Compact and Professional Upload Button Style
   const UploadButtonStyle = {
     bgcolor: "#ff8c00",
     color: "white",
-    width: "100%",
-    py: 2,
-    borderRadius: "30px",
+    width: "fit-content",
+    px: 2, // Padding kam kar di hai
+    py: 0.5, // Height kam karne ke liye padding kam ki hai
+    borderRadius: "4px", // Rounded se square-ish kiya hai banking look ke liye
     textTransform: "none",
     fontWeight: "bold",
+    fontSize: "0.75rem", // Font size thoda aur small rakha hai
     "&:hover": { bgcolor: "#e67e00" },
+    boxShadow: "none", // Excessive shadow hata di hai
   };
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Typography
-        variant="h6"
-        sx={{
-          color: "#004c8f",
-          mb: 4,
-          fontWeight: "bold",
-          textAlign: "center",
-        }}
-      >
-        Final Step: Verification Documents
-      </Typography>
+    <Box sx={{ p: 1, width: "100%" }}>
+      {/* Required Note at Top */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: "red", fontStyle: "italic", fontWeight: "bold" }}
+        >
+          NOTE: Please upload clear documents for verification *
+        </Typography>
+      </Box>
 
-      <Grid container spacing={6} justifyContent="center">
-        {/* Aadhaar Upload */}
-        <Grid item xs={12} md={5}>
-          <Typography sx={LabelStyle}>Aadhaar Card (Front & Back) *</Typography>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            sx={UploadButtonStyle}
-          >
-            Upload Identification Form
-            <input
-              type="file"
-              hidden
-              onChange={(e) => handleFileChange(e, "idProof")}
-            />
-          </Button>
-          <Typography
-            variant="caption"
-            sx={{ mt: 1, display: "block", color: "gray" }}
-          >
-            {files.idProof
-              ? `Selected: ${files.idProof.name}`
-              : "*PDF or JPG preferred"}
-          </Typography>
-        </Grid>
+      {/* Upload Rows using Stack */}
+      <Stack spacing={4}>
+        {/* Row 1: Aadhaar & Photo */}
+        <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={LabelStyle}>
+              Aadhaar Card (Front & Back) *
+            </Typography>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={
+                <CloudUploadIcon sx={{ fontSize: "1rem !important" }} />
+              }
+              sx={UploadButtonStyle}
+            >
+              Upload Aadhaar
+              <input
+                type="file"
+                hidden
+                onChange={(e) => handleFileChange(e, "idProof")}
+              />
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                display: "block",
+                color: "gray",
+                fontSize: "0.7rem",
+              }}
+            >
+              {files.idProof
+                ? `Selected: ${files.idProof.name}`
+                : "*PDF or JPG preferred"}
+            </Typography>
+          </Box>
 
-        {/* Photo Upload */}
-        <Grid item xs={12} md={5}>
-          <Typography sx={LabelStyle}>Passport Size Photo *</Typography>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            sx={UploadButtonStyle}
-          >
-            Upload Passport Photo
-            <input
-              type="file"
-              hidden
-              onChange={(e) => handleFileChange(e, "photo")}
-            />
-          </Button>
-          <Typography
-            variant="caption"
-            sx={{ mt: 1, display: "block", color: "gray" }}
-          >
-            {files.photo
-              ? `Selected: ${files.photo.name}`
-              : "*Upload most recent photo"}
-          </Typography>
-        </Grid>
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={LabelStyle}>Passport Size Photo *</Typography>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={
+                <CloudUploadIcon sx={{ fontSize: "1rem !important" }} />
+              }
+              sx={UploadButtonStyle}
+            >
+              Upload Photo
+              <input
+                type="file"
+                hidden
+                onChange={(e) => handleFileChange(e, "photo")}
+              />
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                display: "block",
+                color: "gray",
+                fontSize: "0.7rem",
+              }}
+            >
+              {files.photo
+                ? `Selected: ${files.photo.name}`
+                : "*Please upload most recent photo"}
+            </Typography>
+          </Box>
+        </Stack>
 
-        {/* PAN Upload */}
-        <Grid item xs={12} md={5}>
-          <Typography sx={LabelStyle}>PAN Card Copy</Typography>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            sx={UploadButtonStyle}
-          >
-            Upload PAN Card
-            <input
-              type="file"
-              hidden
-              onChange={(e) => handleFileChange(e, "panDoc")}
-            />
-          </Button>
-        </Grid>
+        {/* Row 2: PAN & Bank */}
+        <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={LabelStyle}>PAN Card Copy</Typography>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={
+                <CloudUploadIcon sx={{ fontSize: "1rem !important" }} />
+              }
+              sx={UploadButtonStyle}
+            >
+              Upload PAN
+              <input
+                type="file"
+                hidden
+                onChange={(e) => handleFileChange(e, "panDoc")}
+              />
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                display: "block",
+                color: "gray",
+                fontSize: "0.7rem",
+              }}
+            >
+              {files.panDoc
+                ? `Selected: ${files.panDoc.name}`
+                : "*Upload PAN for tax purposes"}
+            </Typography>
+          </Box>
 
-        {/* Bank Passbook Upload */}
-        <Grid item xs={12} md={5}>
-          <Typography sx={LabelStyle}>Bank Passbook / Cheque</Typography>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            sx={UploadButtonStyle}
-          >
-            Upload Bank Document
-            <input
-              type="file"
-              hidden
-              onChange={(e) => handleFileChange(e, "bankDoc")}
-            />
-          </Button>
-        </Grid>
-      </Grid>
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={LabelStyle}>Bank Passbook / Cheque</Typography>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={
+                <CloudUploadIcon sx={{ fontSize: "1rem !important" }} />
+              }
+              sx={UploadButtonStyle}
+            >
+              Upload Bank Doc
+              <input
+                type="file"
+                hidden
+                onChange={(e) => handleFileChange(e, "bankDoc")}
+              />
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                display: "block",
+                color: "gray",
+                fontSize: "0.7rem",
+              }}
+            >
+              {files.bankDoc
+                ? `Selected: ${files.bankDoc.name}`
+                : "*Upload preferred bank document"}
+            </Typography>
+          </Box>
+        </Stack>
+      </Stack>
     </Box>
   );
 };

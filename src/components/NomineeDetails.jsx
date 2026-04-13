@@ -1,37 +1,50 @@
 import React from "react";
-import { Grid, TextField, Typography, Box } from "@mui/material";
+import { TextField, Typography, Box, Stack } from "@mui/material";
 
 const NomineeDetails = ({ formData, handleChange }) => {
+  // Label style consistent with CustomerDetails
   const LabelStyle = {
     fontWeight: "bold",
     color: "#000",
     mb: 1,
     display: "block",
     fontSize: "0.9rem",
+    textAlign: "left",
   };
+
+  // Modern Flat Input Style
   const InputStyle = {
     "& .MuiOutlinedInput-root": {
       backgroundColor: "#f5f5f5",
+      borderRadius: "4px",
+      fontSize: "1rem",
       "& fieldset": { border: "none" },
       "&.Mui-focused fieldset": { border: "1px solid #004c8f" },
     },
-    mb: 3,
+    width: "100%",
   };
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Typography
-        variant="h6"
-        sx={{ color: "#004c8f", mb: 3, fontWeight: "bold" }}
-      >
-        Nominee & Bank Information
-      </Typography>
+    <Box sx={{ p: 1, width: "100%" }}>
+      {/* Note for Required Fields */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: "red", fontStyle: "italic", fontWeight: "bold" }}
+        >
+          NOTE: Please fill necessary fields marked *
+        </Typography>
+      </Box>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+      {/* Row 1: Nominee Name & Relationship */}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={3}
+        sx={{ mb: 4, width: "100%" }}
+      >
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Nominee Name *</Typography>
           <TextField
-            fullWidth
             placeholder="Nominee's full name"
             name="nomineeName"
             value={formData.nomineeName}
@@ -39,11 +52,10 @@ const NomineeDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-        <Grid item xs={12} md={6}>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Nominee Relationship *</Typography>
           <TextField
-            fullWidth
             placeholder="e.g. Spouse, Father"
             name="nomineeRelation"
             value={formData.nomineeRelation}
@@ -51,23 +63,29 @@ const NomineeDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-        <Grid item xs={12} md={6}>
+        </Box>
+      </Stack>
+
+      {/* Row 2: ID & Contact */}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={3}
+        sx={{ mb: 4, width: "100%" }}
+      >
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Nominee PAN / Aadhaar</Typography>
           <TextField
-            fullWidth
-            placeholder="ID Number"
+            placeholder="Enter ID Number"
             name="nomineeId"
             value={formData.nomineeId}
             onChange={handleChange}
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-        <Grid item xs={12} md={6}>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: "300px" }}>
           <Typography sx={LabelStyle}>Nominee Contact Number</Typography>
           <TextField
-            fullWidth
             placeholder="Phone Number"
             name="nomineeContact"
             value={formData.nomineeContact}
@@ -75,24 +93,25 @@ const NomineeDetails = ({ formData, handleChange }) => {
             size="small"
             sx={InputStyle}
           />
-        </Grid>
-        <Grid item xs={12} md={12}>
-          <Typography sx={LabelStyle}>
-            Bank Details (Cheque / Passbook)
-          </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={2}
-            placeholder="Account No, IFSC, Bank Name"
-            name="bankDetails"
-            value={formData.bankDetails}
-            onChange={handleChange}
-            size="small"
-            sx={InputStyle}
-          />
-        </Grid>
-      </Grid>
+        </Box>
+      </Stack>
+
+      {/* Row 3: Bank Details (Wide Column) */}
+      <Box sx={{ width: { xs: "100%", md: "80%" }, mb: 4 }}>
+        <Typography sx={LabelStyle}>
+          Bank Details (Cheque / Passbook)
+        </Typography>
+        <TextField
+          multiline
+          rows={2}
+          placeholder="Account No, IFSC, Bank Name"
+          name="bankDetails"
+          value={formData.bankDetails}
+          onChange={handleChange}
+          size="small"
+          sx={InputStyle}
+        />
+      </Box>
     </Box>
   );
 };
