@@ -7,7 +7,6 @@ import {
   Typography,
   Container,
   Button,
-  Stack,
   IconButton,
   Drawer,
   List,
@@ -34,12 +33,7 @@ const DashboardLayout = ({ children, setAuth }) => {
     navigate("/login");
   };
 
-  const navItems = [
-    { label: "ADD CUSTOMER", path: "/new-application" },
-    { label: "VIEW DATA", path: "/dashboard" },
-  ];
-
-  // Mobile Drawer UI
+  // Mobile Drawer UI (Sirf Logout dikhayega)
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Typography
@@ -50,24 +44,6 @@ const DashboardLayout = ({ children, setAuth }) => {
       </Typography>
       <Divider />
       <List>
-        {navItems.map((item) => (
-          <ListItem key={item.label} disablePadding>
-            <ListItemButton
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
-              sx={{ textAlign: "center" }}
-            >
-              <ListItemText
-                primary={item.label}
-                primaryTypographyProps={{
-                  fontWeight: 700,
-                  color:
-                    location.pathname === item.path ? "#004c8f" : "#64748b",
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
         <ListItem disablePadding>
           <ListItemButton onClick={handleLogout} sx={{ textAlign: "center" }}>
             <ListItemText
@@ -103,7 +79,7 @@ const DashboardLayout = ({ children, setAuth }) => {
           <Toolbar
             sx={{ justifyContent: "space-between", px: { xs: 0, sm: 2 } }}
           >
-            {/* Mobile Menu Icon */}
+            {/* Mobile Menu Icon (Sirf Logout ke liye) */}
             <IconButton
               color="inherit"
               aria-label="open drawer"
@@ -114,47 +90,32 @@ const DashboardLayout = ({ children, setAuth }) => {
               <MenuIcon />
             </IconButton>
 
-            {/* Logo */}
+            {/* Logo - Click karne par main dashboard par jayega */}
             <Typography
               variant="h6"
+              onClick={() => navigate("/dashboard")}
               sx={{
                 fontWeight: 800,
                 color: "#004c8f",
                 fontSize: { xs: "1.1rem", sm: "1.5rem" },
+                cursor: "pointer",
               }}
             >
               SHREE<span style={{ color: "#ff8c00" }}> INVESTMENT</span>
             </Typography>
 
-            {/* Desktop Navigation (Hidden on Mobile) */}
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{ display: { xs: "none", sm: "flex" } }}
-            >
-              {navItems.map((item) => (
-                <Button
-                  key={item.label}
-                  onClick={() => navigate(item.path)}
-                  sx={{
-                    color:
-                      location.pathname === item.path ? "#004c8f" : "#64748b",
-                    fontWeight: 700,
-                  }}
-                >
-                  {item.label}
-                </Button>
-              ))}
+            {/* Desktop Navigation - Sirf Logout Button rakha hai */}
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
               <Button
                 variant="outlined"
                 color="error"
                 size="small"
                 onClick={handleLogout}
-                sx={{ fontWeight: 700 }}
+                sx={{ fontWeight: 700, borderRadius: "20px" }}
               >
                 LOGOUT
               </Button>
-            </Stack>
+            </Box>
           </Toolbar>
         </Container>
       </AppBar>
@@ -188,8 +149,10 @@ const DashboardLayout = ({ children, setAuth }) => {
           }}
         >
           {location.pathname === "/dashboard"
-            ? "Customer Applications Portal"
-            : "Investment Application Form"}
+            ? "Admin Control Panel"
+            : location.pathname === "/customer-list"
+              ? "Customer Applications Portal"
+              : "Investment Application Form"}
         </Typography>
       </Box>
 
@@ -207,7 +170,7 @@ const DashboardLayout = ({ children, setAuth }) => {
           variant="caption"
           sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
         >
-          © 2026 Shree Investment. All Rights Reserved.
+          © {new Date().getFullYear()} Shree Investment. All Rights Reserved.
         </Typography>
       </Box>
     </Box>
