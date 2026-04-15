@@ -16,6 +16,8 @@ import {
   IconButton,
   Stack,
   Avatar,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
@@ -23,6 +25,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import PersonIcon from "@mui/icons-material/Person";
+import GroupIcon from "@mui/icons-material/Group";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -31,6 +35,7 @@ const DocumentManager = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [tabValue, setTabValue] = useState(0);
 
   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
 
@@ -50,8 +55,8 @@ const DocumentManager = () => {
   const handleUploadDoc = async (id, docType, isUpdate = false) => {
     const { value: file } = await Swal.fire({
       title: isUpdate
-        ? `Update ${docType.replace("doc_", "").toUpperCase()}`
-        : `Upload ${docType.replace("doc_", "").toUpperCase()}`,
+        ? `Update Document`
+        : `Upload Document`,
       input: "file",
       inputAttributes: { accept: "image/*,application/pdf" },
       showCancelButton: true,
@@ -61,16 +66,18 @@ const DocumentManager = () => {
     if (file) {
       const formData = new FormData();
       formData.append("id", id);
-      formData.append("docType", docType);
+      formData.append("docType", docType); // Using dynamic docType (e.g., nominee_doc_id_proof)
       formData.append("newFile", file);
       try {
         const res = await axios.post(
           `${API_BASE}update_document.php`,
-          formData,
+          formData
         );
         if (res.data.status === "success") {
           Swal.fire("Success!", "File saved.", "success");
           fetchData();
+        } else {
+            Swal.fire("Error", res.data.message || "Upload failed", "error");
         }
       } catch (err) {
         Swal.fire("Error", "Upload failed", "error");
@@ -103,8 +110,12 @@ const DocumentManager = () => {
   const filteredDocs = customers.filter(
     (c) =>
       c.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone?.includes(searchTerm),
+      c.phone?.includes(searchTerm)
   );
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   // Helper to render document cell
   const RenderDocCell = (row, type, label) => {
@@ -184,6 +195,7 @@ const DocumentManager = () => {
           Back to Dashboard
         </Button>
       </Box>
+      
       <TextField
         fullWidth
         placeholder="Search customers..."
@@ -205,6 +217,18 @@ const DocumentManager = () => {
         }}
       />
 
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          TabIndicatorProps={{ style: { backgroundColor: "#004c8f", height: "3px" } }}
+          sx={{ "& .Mui-selected": { color: "#004c8f !important", fontWeight: "bold" } }}
+        >
+          <Tab icon={<PersonIcon />} iconPosition="start" label="Customer Documents" />
+          <Tab icon={<GroupIcon />} iconPosition="start" label="Nominee Documents" />
+        </Tabs>
+      </Box>
+
       <TableContainer
         component={Paper}
         sx={{
@@ -217,10 +241,10 @@ const DocumentManager = () => {
           <TableHead sx={{ bgcolor: "#f8fafc" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
-                CUSTOMER
+                CUSTOMER / NOMINEE
               </TableCell>
               <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
-                AADHAR
+                ID PROOF
               </TableCell>
               <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
                 PAN
@@ -248,46 +272,59 @@ const DocumentManager = () => {
               >
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: "#004c8f", fontSize: "14px" }}>
-                      {row.customer_name?.charAt(0)}
+                    <Avatar sx={{ bgcolor: tabValue === 0 ? "#004c8f" : "#ff8c00", fontSize: "14px" }}>
+                      {tabValue === 0 ? row.customer_name?.charAt(0) : (row.nominee_name ? row.nominee_name.charAt(0) : "N")}
                     </Avatar>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                        {row.customer_name}
+                        {tabValue === 0 ? row.customer_name : (row.nominee_name || "No Nominee Added")}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "#64748b" }}>
-                        {row.phone}
+                        {tabValue === 0 ? row.phone : `Relation: ${row.nominee_relation || "N/A"}`}
                       </Typography>
                     </Box>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  {RenderDocCell(row, "doc_id_proof", "ID")}
-                </TableCell>
-                <TableCell>{RenderDocCell(row, "doc_pan", "PAN")}</TableCell>
-                <TableCell>{RenderDocCell(row, "doc_bank", "BNK")}</TableCell>
-                <TableCell>{RenderDocCell(row, "doc_photo", "IMG")}</TableCell>
-                <TableCell align="center">
-                  <Chip
-                    label={
-                      row.doc_id_proof && row.doc_pan && row.doc_bank
-                        ? "Done"
-                        : "Pending"
-                    }
-                    size="small"
-                    sx={{
-                      fontWeight: 900,
-                      bgcolor:
-                        row.doc_id_proof && row.doc_pan && row.doc_bank
-                          ? "#dcfce7"
-                          : "#fee2e2",
-                      color:
-                        row.doc_id_proof && row.doc_pan && row.doc_bank
-                          ? "#166534"
-                          : "#991b1b",
-                    }}
-                  />
-                </TableCell>
+                
+                {tabValue === 0 ? (
+                    // CUSTOMER DOCUMENTS TAB
+                    <>
+                        <TableCell>{RenderDocCell(row, "doc_id_proof", "ID")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "doc_pan", "PAN")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "doc_bank", "BNK")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "doc_photo", "IMG")}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "Done" : "Pending"}
+                            size="small"
+                            sx={{
+                              fontWeight: 900,
+                              bgcolor: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#dcfce7" : "#fee2e2",
+                              color: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#166534" : "#991b1b",
+                            }}
+                          />
+                        </TableCell>
+                    </>
+                ) : (
+                    // NOMINEE DOCUMENTS TAB
+                    <>
+                        <TableCell>{RenderDocCell(row, "nominee_doc_id_proof", "ID")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "nominee_doc_pan", "PAN")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "nominee_doc_bank", "BNK")}</TableCell>
+                        <TableCell>{RenderDocCell(row, "nominee_doc_photo", "IMG")}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={row.nominee_doc_id_proof && row.nominee_doc_photo ? "Done" : "Pending"}
+                            size="small"
+                            sx={{
+                              fontWeight: 900,
+                              bgcolor: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#dcfce7" : "#fee2e2",
+                              color: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#166534" : "#991b1b",
+                            }}
+                          />
+                        </TableCell>
+                    </>
+                )}
               </TableRow>
             ))}
           </TableBody>
