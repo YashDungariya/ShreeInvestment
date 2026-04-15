@@ -251,7 +251,7 @@ const CustomerList = () => {
         </Table>
       </TableContainer>
 
-   {/* ORIGINAL VIEW MODAL (Updated with Nominee Docs) */}
+      {/* ORIGINAL VIEW MODAL (Updated with Nominee Docs) */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", md: 850 }, bgcolor: "#fff", borderRadius: 4, boxShadow: "0 25px 50px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto", outline: "none" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc" }}>
@@ -260,7 +260,7 @@ const CustomerList = () => {
           </Box>
           {selectedCustomer && (
             <Box sx={{ p: 4 }}>
-              
+
               {/* 1. PERSONAL DETAILS */}
               <Typography variant="subtitle2" sx={{ color: "#004c8f", fontWeight: 900, mb: 3, pb: 1, borderBottom: "2px solid #e2e8f0", display: "inline-block" }}>
                 1. PERSONAL DETAILS
@@ -293,7 +293,7 @@ const CustomerList = () => {
               <Typography variant="subtitle2" sx={{ color: "#2e7d32", fontWeight: 900, mb: 3, mt: 2, pb: 1, borderBottom: "2px solid #e2e8f0", display: "inline-block" }}>
                 3. KYC DOCUMENTS
               </Typography>
-              
+
               {/* Customer Docs Row */}
               <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: '#64748b', mb: 1 }}>
                 CUSTOMER DOCUMENTS:
@@ -314,7 +314,7 @@ const CustomerList = () => {
                 {selectedCustomer.nominee_doc_id_proof && <Button variant="outlined" color="success" size="small" onClick={() => window.open(`${API_BASE}uploads/${selectedCustomer.nominee_doc_id_proof}`)}>Nominee ID</Button>}
                 {selectedCustomer.nominee_doc_pan && <Button variant="outlined" color="warning" size="small" onClick={() => window.open(`${API_BASE}uploads/${selectedCustomer.nominee_doc_pan}`)}>Nominee PAN</Button>}
                 {selectedCustomer.nominee_doc_bank && <Button variant="outlined" color="error" size="small" onClick={() => window.open(`${API_BASE}uploads/${selectedCustomer.nominee_doc_bank}`)}>Nominee Bank</Button>}
-                
+
                 {/* Fallback agar koi nominee document na ho */}
                 {(!selectedCustomer.nominee_doc_photo && !selectedCustomer.nominee_doc_id_proof && !selectedCustomer.nominee_doc_pan && !selectedCustomer.nominee_doc_bank) && (
                   <Typography variant="body2" sx={{ color: "#94a3b8", fontStyle: "italic", mt: 1 }}>
@@ -338,7 +338,7 @@ const CustomerList = () => {
             <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
               NOTE: Please fill necessary fields marked *
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} sm={4}>
                 <TextField fullWidth label="Customer Name *" name="customer_name" value={editData.customer_name || ""} onChange={handleEditChange} />
@@ -364,7 +364,8 @@ const CustomerList = () => {
                 <TextField fullWidth label="Birth Place" name="birth_place" value={editData.birth_place || ""} onChange={handleEditChange} />
               </Grid>
               <Grid item xs={12} sm={8}>
-                <TextField fullWidth label="Dynamic Notes" name="notes" value={editData.notes || ""} onChange={handleEditChange} />
+                <TextField fullWidth multiline
+                  minRows={3} label="Dynamic Notes" name="notes" value={editData.notes || ""} onChange={handleEditChange} />
               </Grid>
             </Grid>
 

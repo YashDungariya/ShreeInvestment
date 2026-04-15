@@ -144,7 +144,7 @@ const CustomerDetails = ({ formData, handleChange }) => {
           <Typography sx={LabelStyle}>Dynamic Notes</Typography>
           <TextField
             multiline
-            rows={1}
+            minRows={3} // Starts at 3 rows high, expands automatically
             placeholder="Enter additional information here..."
             name="notes"
             value={formData.notes}

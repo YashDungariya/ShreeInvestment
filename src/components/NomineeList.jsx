@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
+import VisibilityIcon from "@mui/icons-material/Visibility"; // Added View Icon
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,13 +35,18 @@ const NomineeList = () => {
 
   // Modal States
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false); // State for View Modal
+  const [selectedNominee, setSelectedNominee] = useState(null); // State to hold data for view
+
   const [editData, setEditData] = useState({
     id: "",
     nominee_name: "",
     nominee_relation: "",
     nominee_id: "",
     nominee_contact: "",
-    bank_details: "", // Added Bank Details
+    bank_details: "",
+    nominee_email: "", // Added Email
+    nominee_notes: "", // Added Notes
   });
 
   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
@@ -65,21 +71,27 @@ const NomineeList = () => {
       nominee_relation: row.nominee_relation || "",
       nominee_id: row.nominee_id || "",
       nominee_contact: row.nominee_contact || "",
-      bank_details: row.bank_details || "", // Populate Bank Details
+      bank_details: row.bank_details || "",
+      nominee_email: row.nominee_email || "", // Added Email
+      nominee_notes: row.nominee_notes || "", // Added Notes
     });
     setOpen(true);
+  };
+
+  const handleViewOpen = (row) => {
+    setSelectedNominee(row);
+    setViewOpen(true);
   };
 
   const handleUpdate = async () => {
     try {
       const res = await axios.post(`${API_BASE}update_nominee.php`, editData);
-      
+
       if (res.data.status === "success") {
         Swal.fire("Updated!", "Nominee details saved.", "success");
         setOpen(false);
         fetchData();
       } else {
-        // Yaha humne res.data.message add kiya hai asli error dekhne ke liye
         Swal.fire("Error", res.data.message || "Failed to update", "error");
       }
     } catch (err) {
@@ -193,6 +205,14 @@ const NomineeList = () => {
                 </TableCell>
                 <TableCell align="center">
                   <Stack direction="row" spacing={1} justifyContent="center">
+                    {/* Added View Icon */}
+                    <IconButton
+                      size="small"
+                      color="info"
+                      onClick={() => handleViewOpen(row)}
+                    >
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
                     <IconButton
                       size="small"
                       color="primary"
@@ -223,7 +243,7 @@ const NomineeList = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: 600, md: 800 }, // Modal width increased
+            width: { xs: "95%", sm: 600, md: 800 },
             bgcolor: "background.paper",
             borderRadius: 3,
             boxShadow: 24,
@@ -240,7 +260,7 @@ const NomineeList = () => {
             </IconButton>
           </Box>
           <Divider sx={{ mb: 3 }} />
-          
+
           <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
             NOTE: Please fill necessary fields marked *
           </Typography>
@@ -288,8 +308,18 @@ const NomineeList = () => {
               />
             </Grid>
 
-            {/* Full Width Row */}
-            <Grid item xs={12}>
+            {/* Added Email */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Nominee Email ID"
+                placeholder="email@example.com"
+                fullWidth
+                value={editData.nominee_email}
+                onChange={(e) => setEditData({ ...editData, nominee_email: e.target.value })}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
               <TextField
                 label="Bank Details (Cheque / Passbook)"
                 placeholder="Account No, IFSC, Bank Name"
@@ -298,22 +328,98 @@ const NomineeList = () => {
                 onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })}
               />
             </Grid>
+
+            {/* Added Notes */}
+            <Grid item xs={12}>
+              <TextField
+                label="Nominee Dynamic Notes"
+                placeholder="Enter additional information here..."
+                fullWidth
+                multiline
+                minRows={3}
+                value={editData.nominee_notes}
+                onChange={(e) => setEditData({ ...editData, nominee_notes: e.target.value })}
+              />
+            </Grid>
+
           </Grid>
 
           <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-             <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>
-                BACK
-             </Button>
+            <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>
+              BACK
+            </Button>
             <Button
               variant="contained"
               onClick={handleUpdate}
               sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}
             >
-              SAVE & NEXT
+              SAVE & UPDATE
             </Button>
           </Box>
         </Box>
       </Modal>
+
+      {/* --- VIEW NOMINEE MODAL --- */}
+      <Modal open={viewOpen} onClose={() => setViewOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: "95%", sm: 500 },
+            bgcolor: "background.paper",
+            borderRadius: 3,
+            boxShadow: 24,
+            p: 4,
+            outline: "none"
+          }}
+        >
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
+              Nominee Details
+            </Typography>
+            <IconButton onClick={() => setViewOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Divider sx={{ mb: 3 }} />
+
+          {selectedNominee && (
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Nominee Name</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_name || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Relationship</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_relation || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">PAN / Aadhaar</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_id || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Contact Number</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_contact || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Email ID</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_email || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Bank Details</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.bank_details || "N/A"}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Notes</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_notes || "N/A"}</Typography>
+              </Box>
+            </Stack>
+          )}
+        </Box>
+      </Modal>
+
     </Box>
   );
 };
