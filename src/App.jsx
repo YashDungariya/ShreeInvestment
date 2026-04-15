@@ -11,7 +11,8 @@ import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import CustomerList from "./components/CustomerList";
 import OnboardingForm from "./components/OnboardingForm";
-import NomineeList from "./components/NomineeList"; // Import karein
+import NomineeList from "./components/NomineeList";
+import DocumentManager from "./components/DocumentManager";
 
 const theme = createTheme({
   palette: { primary: { main: "#004c8f" }, secondary: { main: "#003366" } },
@@ -52,6 +53,10 @@ function App() {
                     <Route
                       path="/new-application"
                       element={<OnboardingForm />}
+                    />
+                    <Route
+                      path="/document-manager"
+                      element={<DocumentManager />}
                     />
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                   </Routes>

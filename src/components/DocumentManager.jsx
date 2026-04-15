@@ -1,0 +1,300 @@
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  InputAdornment,
+  Typography,
+  Chip,
+  IconButton,
+  Stack,
+  Avatar,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SearchIcon from "@mui/icons-material/Search";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
+
+const DocumentManager = () => {
+  const navigate = useNavigate();
+  const [customers, setCustomers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}get_customers.php`);
+      setCustomers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUploadDoc = async (id, docType, isUpdate = false) => {
+    const { value: file } = await Swal.fire({
+      title: isUpdate
+        ? `Update ${docType.replace("doc_", "").toUpperCase()}`
+        : `Upload ${docType.replace("doc_", "").toUpperCase()}`,
+      input: "file",
+      inputAttributes: { accept: "image/*,application/pdf" },
+      showCancelButton: true,
+      confirmButtonColor: "#004c8f",
+    });
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("id", id);
+      formData.append("docType", docType);
+      formData.append("newFile", file);
+      try {
+        const res = await axios.post(
+          `${API_BASE}update_document.php`,
+          formData,
+        );
+        if (res.data.status === "success") {
+          Swal.fire("Success!", "File saved.", "success");
+          fetchData();
+        }
+      } catch (err) {
+        Swal.fire("Error", "Upload failed", "error");
+      }
+    }
+  };
+
+  const handleDeleteDoc = async (id, docType) => {
+    const result = await Swal.fire({
+      title: "Delete document?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+    });
+    if (result.isConfirmed) {
+      try {
+        const res = await axios.post(`${API_BASE}clear_document.php`, {
+          id,
+          docType,
+        });
+        if (res.data.status === "success") {
+          fetchData();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const filteredDocs = customers.filter(
+    (c) =>
+      c.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.phone?.includes(searchTerm),
+  );
+
+  // Helper to render document cell
+  const RenderDocCell = (row, type, label) => {
+    const file = row[type];
+    if (!file) {
+      return (
+        <Button
+          size="small"
+          startIcon={<CloudUploadIcon />}
+          onClick={() => handleUploadDoc(row.id, type, false)}
+          sx={{
+            color: "#94a3b8",
+            textTransform: "none",
+            fontSize: "12px",
+            border: "1px dashed #cbd5e1",
+            borderRadius: "8px",
+            width: "100px",
+          }}
+        >
+          Upload
+        </Button>
+      );
+    }
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          bgcolor: "#f8fafc",
+          borderRadius: "8px",
+          p: "4px 8px",
+          width: "fit-content",
+          border: "1px solid #e2e8f0",
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: "#475569", mr: 1 }}
+        >
+          {label}
+        </Typography>
+        <Stack direction="row" spacing={0}>
+          <IconButton
+            size="small"
+            onClick={() => window.open(`${API_BASE}uploads/${file}`)}
+            color="primary"
+          >
+            <VisibilityIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => handleUploadDoc(row.id, type, true)}
+            color="warning"
+          >
+            <EditIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => handleDeleteDoc(row.id, type)}
+            color="error"
+          >
+            <DeleteIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Stack>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ p: 3, bgcolor: "#f4f7fa", minHeight: "100vh" }}>
+      <Box sx={{ mb: 2 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/dashboard")}
+          sx={{ color: "#475569", fontWeight: "bold" }}
+        >
+          Back to Dashboard
+        </Button>
+      </Box>
+      <TextField
+        fullWidth
+        placeholder="Search customers..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{
+          mb: 4,
+          bgcolor: "white",
+          borderRadius: "12px",
+          "& fieldset": { border: "none" },
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: "#004c8f" }} />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <TableContainer
+        component={Paper}
+        sx={{
+          borderRadius: "16px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+          border: "1px solid #e2e8f0",
+        }}
+      >
+        <Table>
+          <TableHead sx={{ bgcolor: "#f8fafc" }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
+                CUSTOMER
+              </TableCell>
+              <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
+                AADHAR
+              </TableCell>
+              <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
+                PAN
+              </TableCell>
+              <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
+                BANK
+              </TableCell>
+              <TableCell sx={{ fontWeight: 800, color: "#64748b" }}>
+                PHOTO
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ fontWeight: 800, color: "#64748b" }}
+              >
+                STATUS
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredDocs.map((row) => (
+              <TableRow
+                key={row.id}
+                hover
+                sx={{ "&:last-child td": { border: 0 } }}
+              >
+                <TableCell>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Avatar sx={{ bgcolor: "#004c8f", fontSize: "14px" }}>
+                      {row.customer_name?.charAt(0)}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                        {row.customer_name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: "#64748b" }}>
+                        {row.phone}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  {RenderDocCell(row, "doc_id_proof", "ID")}
+                </TableCell>
+                <TableCell>{RenderDocCell(row, "doc_pan", "PAN")}</TableCell>
+                <TableCell>{RenderDocCell(row, "doc_bank", "BNK")}</TableCell>
+                <TableCell>{RenderDocCell(row, "doc_photo", "IMG")}</TableCell>
+                <TableCell align="center">
+                  <Chip
+                    label={
+                      row.doc_id_proof && row.doc_pan && row.doc_bank
+                        ? "Done"
+                        : "Pending"
+                    }
+                    size="small"
+                    sx={{
+                      fontWeight: 900,
+                      bgcolor:
+                        row.doc_id_proof && row.doc_pan && row.doc_bank
+                          ? "#dcfce7"
+                          : "#fee2e2",
+                      color:
+                        row.doc_id_proof && row.doc_pan && row.doc_bank
+                          ? "#166534"
+                          : "#991b1b",
+                    }}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+};
+
+export default DocumentManager;

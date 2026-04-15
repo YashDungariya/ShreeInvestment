@@ -308,7 +308,7 @@ const AdminDashboard = () => {
       icon: <FileUploadIcon sx={{ fontSize: 32, color: "#fff" }} />,
       bgGradient: "linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)",
       blobColor: "rgba(142, 45, 226, 0.1)",
-      path: "/dashboard",
+      path: "/document-manager",
     },
   ];
 

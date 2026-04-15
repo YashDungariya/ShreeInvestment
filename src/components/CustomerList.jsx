@@ -1,375 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import {
-//   Box,
-//   Button,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Paper,
-//   Checkbox,
-//   IconButton,
-//   Chip,
-//   Stack,
-//   Modal,
-//   Typography,
-//   Divider,
-//   Grid,
-// } from "@mui/material";
-// import AddIcon from "@mui/icons-material/Add";
-// import DeleteIcon from "@mui/icons-material/Delete";
-// import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-// import GroupIcon from "@mui/icons-material/Group";
-// import CloseIcon from "@mui/icons-material/Close";
-// import VisibilityIcon from "@mui/icons-material/Visibility";
-// import { useNavigate } from "react-router-dom";
-// import axios from "axios";
-// import Swal from "sweetalert2";
-
-// const CustomerList = () => {
-//   const navigate = useNavigate();
-//   const [customers, setCustomers] = useState([]);
-//   const [selectedIds, setSelectedIds] = useState([]);
-
-//   // Modal States
-//   const [open, setOpen] = useState(false);
-//   const [selectedCustomer, setSelectedCustomer] = useState(null);
-
-//   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
-
-//   useEffect(() => {
-//     fetchData();
-//   }, []);
-
-//   const fetchData = async () => {
-//     try {
-//       const res = await axios.get(`${API_BASE}get_customers.php`);
-//       setCustomers(res.data);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   // --- DELETE LOGIC ---
-//   const handleDelete = async (idsToDelete) => {
-//     const result = await Swal.fire({
-//       title: "Are you sure?",
-//       text: `You want to delete ${idsToDelete.length} record(s)?`,
-//       icon: "warning",
-//       showCancelButton: true,
-//       confirmButtonColor: "#d33",
-//       confirmButtonText: "Yes, delete it!",
-//     });
-
-//     if (result.isConfirmed) {
-//       try {
-//         const res = await axios.post(`${API_BASE}delete_customers.php`, {
-//           ids: idsToDelete,
-//         });
-//         if (res.data.status === "success") {
-//           Swal.fire("Deleted!", "Record(s) removed.", "success");
-//           setSelectedIds([]);
-//           fetchData();
-//         }
-//       } catch (err) {
-//         Swal.fire("Error", "Action failed", "error");
-//       }
-//     }
-//   };
-
-//   // --- SELECTION LOGIC ---
-//   const handleSelectAll = (e) => {
-//     setSelectedIds(e.target.checked ? customers.map((c) => c.id) : []);
-//   };
-
-//   const handleSelectOne = (id) => {
-//     setSelectedIds((prev) =>
-//       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-//     );
-//   };
-
-//   // --- MODAL HANDLERS ---
-//   const handleOpenModal = (customer) => {
-//     setSelectedCustomer(customer);
-//     setOpen(true);
-//   };
-
-//   return (
-//     <Box>
-//       <Box
-//         sx={{
-//           display: "flex",
-//           justifyContent: "space-between",
-//           mb: 3,
-//           alignItems: "center",
-//         }}
-//       >
-//         <Button
-//           startIcon={<ArrowBackIcon />}
-//           onClick={() => navigate("/dashboard")}
-//           sx={{ color: "#64748b", fontWeight: "bold" }}
-//         >
-//           Back to Dashboard
-//         </Button>
-//         <Stack direction="row" spacing={2}>
-//           <Button
-//             variant="contained"
-//             startIcon={<AddIcon />}
-//             onClick={() => navigate("/new-application")}
-//             sx={{ bgcolor: "#004c8f" }}
-//           >
-//             Add New Customer
-//           </Button>
-//           {selectedIds.length > 0 && (
-//             <Button
-//               variant="contained"
-//               color="error"
-//               startIcon={<DeleteIcon />}
-//               onClick={() => handleDelete(selectedIds)}
-//             >
-//               Delete ({selectedIds.length})
-//             </Button>
-//           )}
-//         </Stack>
-//       </Box>
-
-//       <TableContainer
-//         component={Paper}
-//         sx={{ borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}
-//       >
-//         <Table sx={{ minWidth: 1000 }}>
-//           <TableHead sx={{ bgcolor: "#004c8f" }}>
-//             <TableRow>
-//               <TableCell padding="checkbox">
-//                 <Checkbox
-//                   sx={{ color: "white" }}
-//                   onChange={handleSelectAll}
-//                   checked={
-//                     customers.length > 0 &&
-//                     selectedIds.length === customers.length
-//                   }
-//                 />
-//               </TableCell>
-//               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-//                 Sr. No
-//               </TableCell>
-//               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-//                 Customer Name
-//               </TableCell>
-//               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-//                 Phone
-//               </TableCell>
-//               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-//                 Aadhar
-//               </TableCell>
-//               <TableCell
-//                 align="center"
-//                 sx={{ color: "white", fontWeight: "bold" }}
-//               >
-//                 Actions
-//               </TableCell>
-//             </TableRow>
-//           </TableHead>
-//           <TableBody>
-//             {customers.map((row, index) => (
-//               <TableRow
-//                 key={row.id}
-//                 hover
-//                 selected={selectedIds.includes(row.id)}
-//               >
-//                 <TableCell padding="checkbox">
-//                   <Checkbox
-//                     checked={selectedIds.includes(row.id)}
-//                     onChange={() => handleSelectOne(row.id)}
-//                   />
-//                 </TableCell>
-//                 <TableCell>{index + 1}</TableCell>
-//                 <TableCell sx={{ fontWeight: "bold" }}>
-//                   {row.customer_name}
-//                 </TableCell>
-//                 <TableCell>{row.phone}</TableCell>
-//                 <TableCell>{row.aadhar_number || "N/A"}</TableCell>
-//                 <TableCell align="center">
-//                   <IconButton
-//                     color="primary"
-//                     onClick={() => handleOpenModal(row)}
-//                   >
-//                     <VisibilityIcon />
-//                   </IconButton>
-//                   <IconButton
-//                     color="error"
-//                     onClick={() => handleDelete([row.id])}
-//                   >
-//                     <DeleteIcon />
-//                   </IconButton>
-//                 </TableCell>
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* --- CUSTOMER DETAILS MODAL --- */}
-//       <Modal open={open} onClose={() => setOpen(false)}>
-//         <Box
-//           sx={{
-//             position: "absolute",
-//             top: "50%",
-//             left: "50%",
-//             transform: "translate(-50%, -50%)",
-//             width: { xs: "90%", md: 700 },
-//             bgcolor: "background.paper",
-//             borderRadius: 3,
-//             boxShadow: 24,
-//             p: 4,
-//             maxHeight: "90vh",
-//             overflowY: "auto",
-//           }}
-//         >
-//           <Box
-//             sx={{
-//               display: "flex",
-//               justifyContent: "space-between",
-//               alignItems: "center",
-//               mb: 2,
-//             }}
-//           >
-//             <Typography
-//               variant="h6"
-//               sx={{ fontWeight: "bold", color: "#004c8f" }}
-//             >
-//               Customer Full Profile
-//             </Typography>
-//             <IconButton onClick={() => setOpen(false)}>
-//               <CloseIcon />
-//             </IconButton>
-//           </Box>
-//           <Divider sx={{ mb: 3 }} />
-
-//           {selectedCustomer && (
-//             <Grid container spacing={3}>
-//               {/* Personal Section */}
-//               <Grid item xs={12} sm={6}>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Customer Name
-//                 </Typography>
-//                 <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
-//                   {selectedCustomer.customer_name}
-//                 </Typography>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Phone / Email
-//                 </Typography>
-//                 <Typography variant="body2" sx={{ mb: 2 }}>
-//                   {selectedCustomer.phone} /{" "}
-//                   {selectedCustomer.emall || selectedCustomer.email || "N/A"}
-//                 </Typography>
-//               </Grid>
-//               <Grid item xs={12} sm={6}>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Aadhar / PAN
-//                 </Typography>
-//                 <Typography variant="body2" sx={{ mb: 2 }}>
-//                   {selectedCustomer.aadhar_number} /{" "}
-//                   {selectedCustomer.pan_number}
-//                 </Typography>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Birth Place
-//                 </Typography>
-//                 <Typography variant="body2">
-//                   {selectedCustomer.birth_place || "N/A"}
-//                 </Typography>
-//               </Grid>
-
-//               <Grid item xs={12}>
-//                 <Divider>Nominee & Bank Details</Divider>
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Nominee Name ({selectedCustomer.nominee_relation})
-//                 </Typography>
-//                 <Typography variant="body2" sx={{ mb: 2 }}>
-//                   {selectedCustomer.nominee_name || "N/A"}
-//                 </Typography>
-//                 <Typography variant="caption" color="textSecondary">
-//                   Bank Information
-//                 </Typography>
-//                 <Typography variant="body2">
-//                   {selectedCustomer.bank_details || "N/A"}
-//                 </Typography>
-//               </Grid>
-
-//               <Grid item xs={12}>
-//                 <Divider>Attached Documents</Divider>
-//               </Grid>
-
-//               <Grid item xs={12}>
-//                 <Stack direction="row" spacing={1} flexWrap="wrap">
-//                   {selectedCustomer.doc_photo && (
-//                     <Button
-//                       size="small"
-//                       variant="outlined"
-//                       onClick={() =>
-//                         window.open(
-//                           `${API_BASE}uploads/${selectedCustomer.doc_photo}`,
-//                         )
-//                       }
-//                     >
-//                       Photo
-//                     </Button>
-//                   )}
-//                   {selectedCustomer.doc_id_proof && (
-//                     <Button
-//                       size="small"
-//                       variant="outlined"
-//                       onClick={() =>
-//                         window.open(
-//                           `${API_BASE}uploads/${selectedCustomer.doc_id_proof}`,
-//                         )
-//                       }
-//                     >
-//                       Aadhar
-//                     </Button>
-//                   )}
-//                   {selectedCustomer.doc_pan && (
-//                     <Button
-//                       size="small"
-//                       variant="outlined"
-//                       onClick={() =>
-//                         window.open(
-//                           `${API_BASE}uploads/${selectedCustomer.doc_pan}`,
-//                         )
-//                       }
-//                     >
-//                       PAN Card
-//                     </Button>
-//                   )}
-//                   {selectedCustomer.doc_bank && (
-//                     <Button
-//                       size="small"
-//                       variant="outlined"
-//                       onClick={() =>
-//                         window.open(
-//                           `${API_BASE}uploads/${selectedCustomer.doc_bank}`,
-//                         )
-//                       }
-//                     >
-//                       Bank Passbook
-//                     </Button>
-//                   )}
-//                 </Stack>
-//               </Grid>
-//             </Grid>
-//           )}
-//         </Box>
-//       </Modal>
-//     </Box>
-//   );
-// };
-
-// export default CustomerList;
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -383,18 +11,19 @@ import {
   Paper,
   Checkbox,
   IconButton,
-  Chip,
   Stack,
   Modal,
   Typography,
   Divider,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
-// Sirf basic action icons jo standard hain unhe rakha hai (inme error nahi aayega)
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search"; // Import Search Icon
 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -404,6 +33,7 @@ const CustomerList = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // 1. New state for search
   const [open, setOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -421,6 +51,15 @@ const CustomerList = () => {
       console.error(err);
     }
   };
+
+  // 2. Filter logic: search by Name, Phone, or Aadhar
+  const filteredCustomers = customers.filter((item) => {
+    return (
+      item.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.phone?.includes(searchTerm) ||
+      item.aadhar_number?.includes(searchTerm)
+    );
+  });
 
   const handleDelete = async (idsToDelete) => {
     const result = await Swal.fire({
@@ -453,8 +92,7 @@ const CustomerList = () => {
     setOpen(true);
   };
 
-  // --- REUSABLE TEXT-ONLY COMPONENT FOR MODAL ---
-  const InfoBox = ({ label, value, fullWidth = false }) => (
+  const InfoBox = ({ label, value }) => (
     <Box
       sx={{
         width: {
@@ -524,6 +162,33 @@ const CustomerList = () => {
         </Stack>
       </Box>
 
+      {/* 3. PROFESSIONAL SEARCH INPUT AREA */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Search by Name, Phone, or Aadhar..."
+          variant="outlined"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{
+            bgcolor: "white",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "4px",
+              "& fieldset": { borderColor: "#cbd5e1" },
+              "&:hover fieldset": { borderColor: "#004c8f" },
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#64748b" }} />
+              </InputAdornment>
+            ),
+            sx: { height: "50px" },
+          }}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         sx={{ borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}
@@ -536,12 +201,14 @@ const CustomerList = () => {
                   sx={{ color: "white" }}
                   onChange={(e) =>
                     setSelectedIds(
-                      e.target.checked ? customers.map((c) => c.id) : [],
+                      e.target.checked
+                        ? filteredCustomers.map((c) => c.id)
+                        : [],
                     )
                   }
                   checked={
-                    customers.length > 0 &&
-                    selectedIds.length === customers.length
+                    filteredCustomers.length > 0 &&
+                    selectedIds.length === filteredCustomers.length
                   }
                 />
               </TableCell>
@@ -566,7 +233,8 @@ const CustomerList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {customers.map((row, index) => (
+            {/* 4. Mapping filteredCustomers instead of customers */}
+            {filteredCustomers.map((row, index) => (
               <TableRow
                 key={row.id}
                 hover
@@ -606,11 +274,22 @@ const CustomerList = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {filteredCustomers.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  align="center"
+                  sx={{ py: 3, color: "#94a3b8" }}
+                >
+                  No records found matching "{searchTerm}"
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* --- PROFESSIONAL MODAL (NO ICONS / NO GRID) --- */}
+      {/* Modal remains the same */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
@@ -627,7 +306,6 @@ const CustomerList = () => {
             outline: "none",
           }}
         >
-          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -645,10 +323,8 @@ const CustomerList = () => {
               <CloseIcon />
             </IconButton>
           </Box>
-
           {selectedCustomer && (
             <Box sx={{ p: 4 }}>
-              {/* Section 1 */}
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -691,8 +367,6 @@ const CustomerList = () => {
                   value={selectedCustomer.birth_place}
                 />
               </Box>
-
-              {/* Section 2 */}
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -733,8 +407,6 @@ const CustomerList = () => {
                   />
                 </Box>
               </Box>
-
-              {/* Section 3 */}
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -811,37 +483,6 @@ const CustomerList = () => {
                   </Button>
                 )}
               </Stack>
-
-              {/* Admin Notes */}
-              {selectedCustomer.notes && (
-                <Box
-                  sx={{
-                    mt: 5,
-                    p: 2.5,
-                    bgcolor: "#fffbeb",
-                    borderRadius: 2,
-                    border: "1px solid #fde68a",
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: 900,
-                      color: "#92400e",
-                      display: "block",
-                      mb: 1,
-                    }}
-                  >
-                    ADMIN NOTES:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#92400e", fontWeight: 500 }}
-                  >
-                    {selectedCustomer.notes}
-                  </Typography>
-                </Box>
-              )}
             </Box>
           )}
         </Box>

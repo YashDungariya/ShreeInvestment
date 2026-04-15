@@ -107,18 +107,13 @@ const OnboardingForm = () => {
 
       {/* --- Back Arrow Header (Updated to navigate to listing) --- */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-        <IconButton
-          onClick={() => navigate("/customer-list")} // Ab ye listing par le jayega
-          sx={{ mr: 1, color: "#004c8f" }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography
-          variant="body1"
-          sx={{ fontWeight: "bold", color: "#64748b" }}
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/customer-list")}
+          sx={{ color: "#64748b", fontWeight: "bold" }}
         >
           Back to Listing
-        </Typography>
+        </Button>
       </Box>
 
       <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>
