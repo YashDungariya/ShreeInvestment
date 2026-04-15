@@ -16,6 +16,7 @@ import {
   Modal,
   Divider,
   Stack,
+  Grid,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
@@ -39,6 +40,7 @@ const NomineeList = () => {
     nominee_relation: "",
     nominee_id: "",
     nominee_contact: "",
+    bank_details: "", // Added Bank Details
   });
 
   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
@@ -63,6 +65,7 @@ const NomineeList = () => {
       nominee_relation: row.nominee_relation || "",
       nominee_id: row.nominee_id || "",
       nominee_contact: row.nominee_contact || "",
+      bank_details: row.bank_details || "", // Populate Bank Details
     });
     setOpen(true);
   };
@@ -70,13 +73,17 @@ const NomineeList = () => {
   const handleUpdate = async () => {
     try {
       const res = await axios.post(`${API_BASE}update_nominee.php`, editData);
+      
       if (res.data.status === "success") {
         Swal.fire("Updated!", "Nominee details saved.", "success");
         setOpen(false);
         fetchData();
+      } else {
+        // Yaha humne res.data.message add kiya hai asli error dekhne ke liye
+        Swal.fire("Error", res.data.message || "Failed to update", "error");
       }
     } catch (err) {
-      Swal.fire("Error", "Server error", "error");
+      Swal.fire("Error", "Server connection error", "error");
     }
   };
 
@@ -155,30 +162,13 @@ const NomineeList = () => {
         <Table sx={{ minWidth: 900 }}>
           <TableHead sx={{ bgcolor: "#004c8f" }}>
             <TableRow>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                SR.
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                CUSTOMER NAME
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                CUSTOMER PHONE
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                NOMINEE NAME
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                RELATIONSHIP
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                NOMINEE INFO
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ color: "white", fontWeight: "bold" }}
-              >
-                ACTION
-              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>SR.</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER NAME</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER PHONE</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE NAME</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>RELATIONSHIP</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE INFO</TableCell>
+              <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>ACTION</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -189,9 +179,7 @@ const NomineeList = () => {
                 sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
               >
                 <TableCell sx={{ color: "#64748b" }}>{index + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {row.customer_name}
-                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
                 <TableCell>{row.phone}</TableCell>
                 <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
                   {row.nominee_name || "---"}
@@ -199,12 +187,8 @@ const NomineeList = () => {
                 <TableCell>{row.nominee_relation || "---"}</TableCell>
                 <TableCell>
                   <Box sx={{ fontSize: "0.85rem" }}>
-                    <div>
-                      <b>ID:</b> {row.nominee_id || "-"}
-                    </div>
-                    <div>
-                      <b>Ph:</b> {row.nominee_contact || "-"}
-                    </div>
+                    <div><b>ID:</b> {row.nominee_id || "-"}</div>
+                    <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
                   </Box>
                 </TableCell>
                 <TableCell align="center">
@@ -231,7 +215,7 @@ const NomineeList = () => {
         </Table>
       </TableContainer>
 
-      {/* --- EDIT NOMINEE MODAL --- */}
+      {/* --- EDIT NOMINEE MODAL (UPDATED DESIGN) --- */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
@@ -239,64 +223,95 @@ const NomineeList = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 400,
+            width: { xs: "95%", sm: 600, md: 800 }, // Modal width increased
             bgcolor: "background.paper",
-            borderRadius: 2,
+            borderRadius: 3,
             boxShadow: 24,
             p: 4,
+            outline: "none"
           }}
         >
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              Edit Nominee
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
+              Edit Nominee Details
             </Typography>
             <IconButton onClick={() => setOpen(false)}>
               <CloseIcon />
             </IconButton>
           </Box>
           <Divider sx={{ mb: 3 }} />
-          <Stack spacing={2}>
-            <TextField
-              label="Nominee Name"
-              fullWidth
-              value={editData.nominee_name}
-              onChange={(e) =>
-                setEditData({ ...editData, nominee_name: e.target.value })
-              }
-            />
-            <TextField
-              label="Relationship"
-              fullWidth
-              value={editData.nominee_relation}
-              onChange={(e) =>
-                setEditData({ ...editData, nominee_relation: e.target.value })
-              }
-            />
-            <TextField
-              label="Nominee ID"
-              fullWidth
-              value={editData.nominee_id}
-              onChange={(e) =>
-                setEditData({ ...editData, nominee_id: e.target.value })
-              }
-            />
-            <TextField
-              label="Contact Number"
-              fullWidth
-              value={editData.nominee_contact}
-              onChange={(e) =>
-                setEditData({ ...editData, nominee_contact: e.target.value })
-              }
-            />
+          
+          <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
+            NOTE: Please fill necessary fields marked *
+          </Typography>
+
+          <Grid container spacing={3}>
+            {/* Column 1 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Nominee Name *"
+                placeholder="Nominee's full name"
+                fullWidth
+                value={editData.nominee_name}
+                onChange={(e) => setEditData({ ...editData, nominee_name: e.target.value })}
+              />
+            </Grid>
+            {/* Column 2 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Nominee Relationship *"
+                placeholder="e.g. Spouse, Father"
+                fullWidth
+                value={editData.nominee_relation}
+                onChange={(e) => setEditData({ ...editData, nominee_relation: e.target.value })}
+              />
+            </Grid>
+
+            {/* Column 1 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Nominee PAN / Aadhaar"
+                placeholder="Enter ID Number"
+                fullWidth
+                value={editData.nominee_id}
+                onChange={(e) => setEditData({ ...editData, nominee_id: e.target.value })}
+              />
+            </Grid>
+            {/* Column 2 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Nominee Contact Number"
+                placeholder="Phone Number"
+                fullWidth
+                value={editData.nominee_contact}
+                onChange={(e) => setEditData({ ...editData, nominee_contact: e.target.value })}
+              />
+            </Grid>
+
+            {/* Full Width Row */}
+            <Grid item xs={12}>
+              <TextField
+                label="Bank Details (Cheque / Passbook)"
+                placeholder="Account No, IFSC, Bank Name"
+                fullWidth
+                value={editData.bank_details}
+                onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })}
+              />
+            </Grid>
+          </Grid>
+
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+             <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>
+                BACK
+             </Button>
             <Button
               variant="contained"
-              fullWidth
               onClick={handleUpdate}
-              sx={{ bgcolor: "#004c8f", mt: 2 }}
+              sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}
             >
-              Save Changes
+              SAVE & NEXT
             </Button>
-          </Stack>
+          </Box>
         </Box>
       </Modal>
     </Box>
