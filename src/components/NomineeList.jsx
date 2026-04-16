@@ -17,6 +17,7 @@ import {
   Divider,
   Stack,
   Grid,
+  TablePagination
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
@@ -33,6 +34,9 @@ const NomineeList = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Pagination States
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   // Modal States
   const [open, setOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false); // State for View Modal
@@ -128,6 +132,26 @@ const NomineeList = () => {
       item.phone?.includes(searchTerm) ||
       item.nominee_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+  // Reset pagination when searching
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm]);
+
+  // Pagination Handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page when rows per page changes
+  };
+
+  // Get data for current page
+  const paginatedNominees = filteredNominees.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <Box sx={{ p: 3, bgcolor: "#f1f5f9", minHeight: "100vh" }}>
@@ -163,78 +187,93 @@ const NomineeList = () => {
         />
       </Box>
 
-      <TableContainer
-        component={Paper}
-        sx={{
-          borderRadius: "4px",
-          border: "1px solid #e2e8f0",
-          bgcolor: "#fafafa",
-        }}
-      >
-        <Table sx={{ minWidth: 900 }}>
-          <TableHead sx={{ bgcolor: "#004c8f" }}>
-            <TableRow>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>SR.</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER NAME</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER PHONE</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE NAME</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>RELATIONSHIP</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE INFO</TableCell>
-              <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>ACTION</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredNominees.map((row, index) => (
-              <TableRow
-                key={row.id}
-                hover
-                sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
-              >
-                <TableCell sx={{ color: "#64748b" }}>{index + 1}</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
-                <TableCell>{row.phone}</TableCell>
-                <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
-                  {row.nominee_name || "---"}
-                </TableCell>
-                <TableCell>{row.nominee_relation || "---"}</TableCell>
-                <TableCell>
-                  <Box sx={{ fontSize: "0.85rem" }}>
-                    <div><b>ID:</b> {row.nominee_id || "-"}</div>
-                    <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
-                  </Box>
-                </TableCell>
-                <TableCell align="center">
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    {/* Added View Icon */}
-                    <IconButton
-                      size="small"
-                      color="info"
-                      onClick={() => handleViewOpen(row)}
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEditOpen(row)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                </TableCell>
+     <Paper sx={{ borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+        <TableContainer>
+          <Table sx={{ minWidth: 900 }}>
+            <TableHead sx={{ bgcolor: "#004c8f" }}>
+              <TableRow>
+                <TableCell sx={{ color: "white", fontWeight: "bold", width: "5%" }}>SR.</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER NAME</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER PHONE</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE NAME</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>RELATIONSHIP</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE INFO</TableCell>
+                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>ACTION</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {paginatedNominees.map((row, index) => {
+                const actualIndex = page * rowsPerPage + index + 1; // Calculate correct serial number
+                return(
+                <TableRow
+                  key={row.id}
+                  hover
+                  sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
+                >
+                  <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
+                  <TableCell>{row.phone}</TableCell>
+                  <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
+                    {row.nominee_name || "---"}
+                  </TableCell>
+                  <TableCell>{row.nominee_relation || "---"}</TableCell>
+                  <TableCell>
+                    <Box sx={{ fontSize: "0.85rem" }}>
+                      <div><b>ID:</b> {row.nominee_id || "-"}</div>
+                      <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
+                    </Box>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <IconButton
+                        size="small"
+                        color="info"
+                        onClick={() => handleViewOpen(row)}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleEditOpen(row)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              )})}
 
+              {paginatedNominees.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 5, color: "#94a3b8" }}>
+                    No records found matching "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        
+        {/* Pagination Controls */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredNominees.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ borderTop: "1px solid #e2e8f0" }}
+        />
+      </Paper>
       {/* --- EDIT NOMINEE MODAL (UPDATED DESIGN) --- */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box

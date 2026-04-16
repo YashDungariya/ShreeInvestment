@@ -18,6 +18,7 @@ import {
   TextField,
   InputAdornment,
   Grid,
+  TablePagination
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -37,6 +38,9 @@ const CustomerList = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Default to 10 rows
   // View Modal State
   const [open, setOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -67,6 +71,10 @@ const CustomerList = () => {
       item.aadhar_number?.includes(searchTerm)
     );
   });
+  // Reset page to 0 when search term changes
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm]);
 
   const handleDelete = async (idsToDelete) => {
     const result = await Swal.fire({
@@ -139,7 +147,21 @@ const CustomerList = () => {
       Swal.fire("Error", "Server error while updating.", "error");
     }
   };
+// Pagination Handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Calculate the sliced data for the current page
+  const paginatedCustomers = filteredCustomers.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+  );
   const InfoBox = ({ label, value }) => (
     <Box sx={{ width: { xs: "100%", sm: "calc(50% - 20px)", md: "calc(33.33% - 20px)" }, mb: 3 }}>
       <Typography variant="caption" sx={{ fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1 }}>
@@ -194,62 +216,81 @@ const CustomerList = () => {
           }}
         />
       </Box>
-
-      <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-        <Table>
-          <TableHead sx={{ bgcolor: "#004c8f" }}>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  sx={{ color: "white" }}
-                  onChange={(e) => setSelectedIds(e.target.checked ? filteredCustomers.map((c) => c.id) : [])}
-                  checked={filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length}
-                />
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>Sr.</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>Customer Name</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>Phone</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>Aadhaar</TableCell>
-              <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredCustomers.map((row, index) => (
-              <TableRow key={row.id} hover selected={selectedIds.includes(row.id)}>
+{/* Table & Pagination wrapped in a single Paper for clean UI */}
+      <Paper sx={{ borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+        <TableContainer>
+          <Table>
+            <TableHead sx={{ bgcolor: "#004c8f" }}>
+              <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    checked={selectedIds.includes(row.id)}
-                    onChange={() => setSelectedIds((prev) => prev.includes(row.id) ? prev.filter((i) => i !== row.id) : [...prev, row.id])}
+                    sx={{ color: "white" }}
+                    onChange={(e) => setSelectedIds(e.target.checked ? paginatedCustomers.map((c) => c.id) : [])}
+                    checked={paginatedCustomers.length > 0 && paginatedCustomers.every((c) => selectedIds.includes(c.id))}
                   />
                 </TableCell>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>{row.customer_name}</TableCell>
-                <TableCell>{row.phone}</TableCell>
-                <TableCell>{row.aadhar_number || "---"}</TableCell>
-                <TableCell align="center">
-                  <IconButton color="primary" onClick={() => handleOpenModal(row)}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  {/* ADDED EDIT ICON HERE */}
-                  <IconButton color="secondary" onClick={() => handleOpenEditModal(row)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete([row.id])}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Sr.</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Customer Name</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Phone</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Aadhaar</TableCell>
+                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>Actions</TableCell>
               </TableRow>
-            ))}
-            {filteredCustomers.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3, color: "#94a3b8" }}>
-                  No records found matching "{searchTerm}"
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {paginatedCustomers.map((row, index) => {
+                const actualIndex = page * rowsPerPage + index + 1; // Calculate correct serial number
+                return (
+                  <TableRow key={row.id} hover selected={selectedIds.includes(row.id)}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedIds.includes(row.id)}
+                        onChange={() => setSelectedIds((prev) => prev.includes(row.id) ? prev.filter((i) => i !== row.id) : [...prev, row.id])}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{row.customer_name}</TableCell>
+                    <TableCell>{row.phone}</TableCell>
+                    <TableCell>{row.aadhar_number || "---"}</TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <IconButton size="small" color="primary" onClick={() => handleOpenModal(row)}>
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="secondary" onClick={() => handleOpenEditModal(row)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDelete([row.id])}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {paginatedCustomers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 5, color: "#94a3b8" }}>
+                    No records found matching "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Pagination Component */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredCustomers.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ borderTop: "1px solid #e2e8f0" }}
+        />
+      </Paper>
 
       {/* ORIGINAL VIEW MODAL (Updated with Nominee Docs) */}
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -284,8 +325,10 @@ const CustomerList = () => {
                 <InfoBox label="Relationship" value={selectedCustomer.nominee_relation} />
                 <InfoBox label="Nominee ID" value={selectedCustomer.nominee_id} />
                 <InfoBox label="Nominee Contact" value={selectedCustomer.nominee_contact} />
-                <Box sx={{ width: "100%" }}>
+                <InfoBox label="Nominee Email" value={selectedCustomer.nominee_email} />
                   <InfoBox label="Bank Account Details" value={selectedCustomer.bank_details} />
+                <Box sx={{ width: "100%" }}>
+                  <InfoBox label="Nominee Notes" value={selectedCustomer.nominee_notes} />
                 </Box>
               </Box>
 

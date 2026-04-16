@@ -270,22 +270,56 @@
 // };
 
 // export default AdminDashboard;
-
-import React from "react";
-import { Card, CardContent, Typography, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, Typography, Box, CircularProgress } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import GroupIcon from "@mui/icons-material/Group";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    totalNominees: 0,
+    isLoading: true
+  });
+
+  const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      // Re-using the existing get_customers.php API to count records
+      const res = await axios.get(`${API_BASE}get_customers.php`);
+      const data = res.data;
+      
+      // Calculate counts
+      const customersCount = data.length;
+      // Nominee exists if nominee_name is not empty
+      const nomineesCount = data.filter(c => c.nominee_name && c.nominee_name.trim() !== "").length;
+
+      setStats({
+        totalCustomers: customersCount,
+        totalNominees: nomineesCount,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      setStats(prev => ({ ...prev, isLoading: false }));
+    }
+  };
 
   const cardData = [
     {
       id: "customers",
       title: "Customers",
+      count: stats.totalCustomers,
       desc: "View and manage all customer details. Add, edit, or delete customer information.",
       icon: <GroupIcon sx={{ fontSize: 32, color: "#fff" }} />,
       bgGradient: "linear-gradient(135deg, #2196f3 0%, #00bcd4 100%)",
@@ -295,6 +329,7 @@ const AdminDashboard = () => {
     {
       id: "nominees",
       title: "Nominees",
+      count: stats.totalNominees,
       desc: "View all nominee information linked to customers. Track nominee details.",
       icon: <PersonAddIcon sx={{ fontSize: 32, color: "#fff" }} />,
       bgGradient: "linear-gradient(135deg, #00b09b 0%, #96c93d 100%)",
@@ -304,6 +339,7 @@ const AdminDashboard = () => {
     {
       id: "uploads",
       title: "Uploads",
+      count: "Manage", // Text instead of count for this one
       desc: "Manage customer documents and files. View Aadhar, PAN, and bank documents.",
       icon: <FileUploadIcon sx={{ fontSize: 32, color: "#fff" }} />,
       bgGradient: "linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)",
@@ -350,20 +386,38 @@ const AdminDashboard = () => {
           }}
         >
           <CardContent sx={{ p: 4, position: "relative", zIndex: 1 }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: 3,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: card.bgGradient,
-                mb: 3,
-              }}
-            >
-              {card.icon}
+            
+            {/* Header Area with Icon and Count */}
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 3,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: card.bgGradient,
+                }}
+              >
+                {card.icon}
+              </Box>
+
+              {/* Dynamic Number Display */}
+              <Box sx={{ textAlign: "right" }}>
+                <Typography variant="body2" sx={{ color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Total
+                </Typography>
+                {stats.isLoading ? (
+                   <CircularProgress size={24} sx={{ mt: 1, color: card.id === 'customers' ? '#2196f3' : card.id === 'nominees' ? '#00b09b' : '#8e2de2' }} />
+                ) : (
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: "#1e293b" }}>
+                    {card.count}
+                  </Typography>
+                )}
+              </Box>
             </Box>
+
             <Typography
               variant="h5"
               sx={{ fontWeight: 700, mb: 1.5, color: "#1e293b" }}
@@ -381,6 +435,7 @@ const AdminDashboard = () => {
             >
               {card.desc}
             </Typography>
+            
             <Box
               sx={{
                 display: "flex",
