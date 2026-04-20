@@ -9,13 +9,16 @@ import {
   AppBar,
   Toolbar,
   CssBaseline,
+  InputAdornment, IconButton
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const AdminLogin = ({ setAuth }) => {
   const [credentials, setCredentials] = useState({ phone: "", password: "" });
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -114,10 +117,24 @@ const AdminLogin = ({ setAuth }) => {
                 fullWidth
                 label="Password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 variant="outlined"
                 sx={{ mb: 3 }}
                 onChange={handleInputChange}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
               <Button
                 fullWidth
