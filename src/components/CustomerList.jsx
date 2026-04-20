@@ -522,7 +522,7 @@ const CustomerList = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: 500 }, // Smaller width than edit modal
+            width: { xs: "95%", sm: "85%", md: 900 },
             bgcolor: "#fff",
             borderRadius: 4,
             boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
