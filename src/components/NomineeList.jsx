@@ -105,7 +105,7 @@ const NomineeList = () => {
   };
 
 
-  const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
+  const API_BASE = "https://shreeinvestment.in/api/";
 
   useEffect(() => {
     fetchData();

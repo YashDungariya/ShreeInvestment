@@ -25,7 +25,7 @@ const AdminLogin = ({ setAuth }) => {
     e.preventDefault();
     // Static Credentials
     if (
-      credentials.phone === "9999999999" &&
+      credentials.phone === "9879076571" &&
       credentials.password === "admin@123"
     ) {
       localStorage.setItem("adminAuth", "true"); // Persistent Login

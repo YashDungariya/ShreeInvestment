@@ -37,7 +37,7 @@ const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [tabValue, setTabValue] = useState(0);
 
-  const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
+  const API_BASE = "https://shreeinvestment.in/api/";
 
   useEffect(() => {
     fetchData();
@@ -77,7 +77,7 @@ const DocumentManager = () => {
           Swal.fire("Success!", "File saved.", "success");
           fetchData();
         } else {
-            Swal.fire("Error", res.data.message || "Upload failed", "error");
+          Swal.fire("Error", res.data.message || "Upload failed", "error");
         }
       } catch (err) {
         Swal.fire("Error", "Upload failed", "error");
@@ -195,7 +195,7 @@ const DocumentManager = () => {
           Back to Dashboard
         </Button>
       </Box>
-      
+
       <TextField
         fullWidth
         placeholder="Search customers..."
@@ -218,9 +218,9 @@ const DocumentManager = () => {
       />
 
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
           TabIndicatorProps={{ style: { backgroundColor: "#004c8f", height: "3px" } }}
           sx={{ "& .Mui-selected": { color: "#004c8f !important", fontWeight: "bold" } }}
         >
@@ -285,45 +285,45 @@ const DocumentManager = () => {
                     </Box>
                   </Box>
                 </TableCell>
-                
+
                 {tabValue === 0 ? (
-                    // CUSTOMER DOCUMENTS TAB
-                    <>
-                        <TableCell>{RenderDocCell(row, "doc_id_proof", "ID")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "doc_pan", "PAN")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "doc_bank", "BNK")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "doc_photo", "IMG")}</TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "Done" : "Pending"}
-                            size="small"
-                            sx={{
-                              fontWeight: 900,
-                              bgcolor: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#dcfce7" : "#fee2e2",
-                              color: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#166534" : "#991b1b",
-                            }}
-                          />
-                        </TableCell>
-                    </>
+                  // CUSTOMER DOCUMENTS TAB
+                  <>
+                    <TableCell>{RenderDocCell(row, "doc_id_proof", "ID")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "doc_pan", "PAN")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "doc_bank", "BNK")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "doc_photo", "IMG")}</TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        label={row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "Done" : "Pending"}
+                        size="small"
+                        sx={{
+                          fontWeight: 900,
+                          bgcolor: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#dcfce7" : "#fee2e2",
+                          color: row.doc_id_proof && row.doc_pan && row.doc_bank && row.doc_photo ? "#166534" : "#991b1b",
+                        }}
+                      />
+                    </TableCell>
+                  </>
                 ) : (
-                    // NOMINEE DOCUMENTS TAB
-                    <>
-                        <TableCell>{RenderDocCell(row, "nominee_doc_id_proof", "ID")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "nominee_doc_pan", "PAN")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "nominee_doc_bank", "BNK")}</TableCell>
-                        <TableCell>{RenderDocCell(row, "nominee_doc_photo", "IMG")}</TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={row.nominee_doc_id_proof && row.nominee_doc_photo ? "Done" : "Pending"}
-                            size="small"
-                            sx={{
-                              fontWeight: 900,
-                              bgcolor: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#dcfce7" : "#fee2e2",
-                              color: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#166534" : "#991b1b",
-                            }}
-                          />
-                        </TableCell>
-                    </>
+                  // NOMINEE DOCUMENTS TAB
+                  <>
+                    <TableCell>{RenderDocCell(row, "nominee_doc_id_proof", "ID")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "nominee_doc_pan", "PAN")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "nominee_doc_bank", "BNK")}</TableCell>
+                    <TableCell>{RenderDocCell(row, "nominee_doc_photo", "IMG")}</TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        label={row.nominee_doc_id_proof && row.nominee_doc_photo ? "Done" : "Pending"}
+                        size="small"
+                        sx={{
+                          fontWeight: 900,
+                          bgcolor: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#dcfce7" : "#fee2e2",
+                          color: row.nominee_doc_id_proof && row.nominee_doc_photo ? "#166534" : "#991b1b",
+                        }}
+                      />
+                    </TableCell>
+                  </>
                 )}
               </TableRow>
             ))}

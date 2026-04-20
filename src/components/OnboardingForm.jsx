@@ -64,7 +64,7 @@ const OnboardingForm = () => {
 
     try {
       const res = await axios.post(
-        "https://lightyellow-mole-663257.hostingersite.com/api/submit_form.php",
+        "https://shreeinvestment.in/api/submit_form.php",
         data,
       );
       if (res.data.status === "success") {
