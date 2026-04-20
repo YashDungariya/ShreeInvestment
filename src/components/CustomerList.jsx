@@ -27,7 +27,7 @@ import EditIcon from "@mui/icons-material/Edit"; // Edit Icon added
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
-
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -48,6 +48,8 @@ const CustomerList = () => {
   // Edit Modal State
   const [openEdit, setOpenEdit] = useState(false);
   const [editData, setEditData] = useState({});
+  const [openNotes, setOpenNotes] = useState(false);
+  const [notesData, setNotesData] = useState({ id: "", notes: "" });
 
   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
 
@@ -75,6 +77,44 @@ const CustomerList = () => {
   useEffect(() => {
     setPage(0);
   }, [searchTerm]);
+  const handleOpenNotesModal = (customer) => {
+    setNotesData({
+      id: customer.id,
+      notes: customer.notes || "",
+    });
+    setOpenNotes(true);
+  };
+
+  // NEW: Handle change for Notes Only Modal
+  const handleNotesChange = (e) => {
+    setNotesData({ ...notesData, notes: e.target.value });
+  };
+
+  // NEW: Submit ONLY notes
+  const handleNotesSubmit = async () => {
+    // We only send ID and Notes to update just this field
+    const payload = new FormData();
+    payload.append("id", notesData.id);
+    payload.append("notes", notesData.notes || "");
+
+    // Note: This assumes your update_customer.php backend can handle partial updates.
+    // If your backend requires ALL fields, we need to send the full customer object instead.
+    // Let's assume for safety we are doing a dedicated call or your backend handles it gracefully.
+
+    try {
+      const res = await axios.post(`${API_BASE}update_customer.php`, payload);
+      if (res.data.status === "success") {
+        Swal.fire("Updated!", "Customer notes saved successfully.", "success");
+        setOpenNotes(false);
+        fetchData();
+      } else {
+        Swal.fire("Error", res.data.message || "Failed to save notes", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Server error while saving notes.", "error");
+    }
+  };
 
   const handleDelete = async (idsToDelete) => {
     const result = await Swal.fire({
@@ -147,7 +187,7 @@ const CustomerList = () => {
       Swal.fire("Error", "Server error while updating.", "error");
     }
   };
-// Pagination Handlers
+  // Pagination Handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -159,8 +199,8 @@ const CustomerList = () => {
 
   // Calculate the sliced data for the current page
   const paginatedCustomers = filteredCustomers.slice(
-      page * rowsPerPage,
-      page * rowsPerPage + rowsPerPage
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
   );
   const InfoBox = ({ label, value }) => (
     <Box sx={{ width: { xs: "100%", sm: "calc(50% - 20px)", md: "calc(33.33% - 20px)" }, mb: 3 }}>
@@ -216,7 +256,7 @@ const CustomerList = () => {
           }}
         />
       </Box>
-{/* Table & Pagination wrapped in a single Paper for clean UI */}
+      {/* Table & Pagination wrapped in a single Paper for clean UI */}
       <Paper sx={{ borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
         <TableContainer>
           <Table>
@@ -231,9 +271,15 @@ const CustomerList = () => {
                 </TableCell>
                 <TableCell sx={{ color: "white", fontWeight: "bold" }}>Sr.</TableCell>
                 <TableCell sx={{ color: "white", fontWeight: "bold" }}>Customer Name</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Phone</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Aadhaar</TableCell>
-                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>Actions</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Phone No.</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>PAN No.</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>Aadhaar No.</TableCell>
+                <TableCell
+                  align="left"
+                  sx={{ color: "white", fontWeight: "bold", pr: 4 }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -250,6 +296,7 @@ const CustomerList = () => {
                     <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>{row.customer_name}</TableCell>
                     <TableCell>{row.phone}</TableCell>
+                    <TableCell>{row.pan_number || "---"}</TableCell>
                     <TableCell>{row.aadhar_number || "---"}</TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={1} justifyContent="center">
@@ -258,6 +305,10 @@ const CustomerList = () => {
                         </IconButton>
                         <IconButton size="small" color="secondary" onClick={() => handleOpenEditModal(row)}>
                           <EditIcon fontSize="small" />
+                        </IconButton>
+                        {/* CHANGED: Now opens the dedicated Notes modal */}
+                        <IconButton size="small" sx={{ color: "#d97706" }} onClick={() => handleOpenNotesModal(row)}>
+                          <NoteAltIcon fontSize="small" />
                         </IconButton>
                         <IconButton size="small" color="error" onClick={() => handleDelete([row.id])}>
                           <DeleteIcon fontSize="small" />
@@ -314,6 +365,7 @@ const CustomerList = () => {
                 <InfoBox label="Aadhaar Number" value={selectedCustomer.aadhar_number} />
                 <InfoBox label="PAN Number" value={selectedCustomer.pan_number} />
                 <InfoBox label="Birth Place" value={selectedCustomer.birth_place} />
+                <InfoBox label="Nominee Notes" value={selectedCustomer.notes} />
               </Box>
 
               {/* 2. NOMINEE & BANKING */}
@@ -326,7 +378,7 @@ const CustomerList = () => {
                 <InfoBox label="Nominee ID" value={selectedCustomer.nominee_id} />
                 <InfoBox label="Nominee Contact" value={selectedCustomer.nominee_contact} />
                 <InfoBox label="Nominee Email" value={selectedCustomer.nominee_email} />
-                  <InfoBox label="Bank Account Details" value={selectedCustomer.bank_details} />
+                <InfoBox label="Bank Account Details" value={selectedCustomer.bank_details} />
                 <Box sx={{ width: "100%" }}>
                   <InfoBox label="Nominee Notes" value={selectedCustomer.nominee_notes} />
                 </Box>
@@ -370,56 +422,159 @@ const CustomerList = () => {
           )}
         </Box>
       </Modal>
-      {/* NEW EDIT MODAL */}
+      {/* --- EDIT MODAL --- */}
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", md: 900 }, bgcolor: "#fff", borderRadius: 4, boxShadow: "0 25px 50px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto", outline: "none" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc" }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>Edit Customer Details</Typography>
-            <IconButton onClick={() => setOpenEdit(false)}><CloseIcon /></IconButton>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: "95%", sm: "85%", md: 900 }, // Responsive Modal Width
+            bgcolor: "#fff",
+            borderRadius: 4,
+            boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            outline: "none",
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f", fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+              Edit Customer Details
+            </Typography>
+            <IconButton onClick={() => setOpenEdit(false)}>
+              <CloseIcon />
+            </IconButton>
           </Box>
-          <Box sx={{ p: 4 }}>
+
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}> {/* Responsive Padding */}
             <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
               NOTE: Please fill necessary fields marked *
             </Typography>
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={4}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}> {/* Responsive Grid Spacing */}
+              {/* Standard Fields: 1 col (Mobile), 2 cols (Tablet), 3 cols (Desktop) */}
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Customer Name *" name="customer_name" value={editData.customer_name || ""} onChange={handleEditChange} />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Mother's Name *" name="mother_name" value={editData.mother_name || ""} onChange={handleEditChange} />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Email ID" name="email" value={editData.email || ""} onChange={handleEditChange} />
               </Grid>
 
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Aadhaar Number *" name="aadhar_number" value={editData.aadhar_number || ""} onChange={handleEditChange} />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="PAN Number *" name="pan_number" value={editData.pan_number || ""} onChange={handleEditChange} />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Phone Number *" name="phone" value={editData.phone || ""} onChange={handleEditChange} />
               </Grid>
 
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Birth Place" name="birth_place" value={editData.birth_place || ""} onChange={handleEditChange} />
               </Grid>
-              <Grid item xs={12} sm={8}>
-                <TextField fullWidth multiline
-                  minRows={3} label="Dynamic Notes" name="notes" value={editData.notes || ""} onChange={handleEditChange} />
+
+              {/* DYNAMIC NOTES - Always 100% width */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  maxRows={4}
+                  label="Dynamic Notes"
+                  name="notes"
+                  value={editData.notes || ""}
+                  onChange={handleEditChange}
+                  placeholder="Enter customer notes here..."
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f8fafc",
+                    }
+                  }}
+                />
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Button sx={{ color: "#94a3b8" }} onClick={() => setOpenEdit(false)}>BACK</Button>
-              <Button variant="contained" sx={{ bgcolor: "#004c8f", boxShadow: "none", fontWeight: "bold", px: 4 }} onClick={handleUpdateSubmit}>SAVE & UPDATE</Button>
+            {/* Action Buttons - Stack vertically on small screens */}
+            <Box sx={{ mt: 4, display: "flex", flexDirection: { xs: "column-reverse", sm: "row" }, gap: 2, justifyContent: "space-between", alignItems: "center" }}>
+              <Button sx={{ color: "#94a3b8", width: { xs: "100%", sm: "auto" } }} onClick={() => setOpenEdit(false)}>
+                BACK
+              </Button>
+              <Button variant="contained" sx={{ bgcolor: "#004c8f", boxShadow: "none", fontWeight: "bold", px: 4, py: { xs: 1.5, sm: 1 }, width: { xs: "100%", sm: "auto" } }} onClick={handleUpdateSubmit}>
+                SAVE & UPDATE
+              </Button>
+            </Box>
+
+          </Box>
+        </Box>
+      </Modal>
+      {/* --- QUICK NOTES MODAL --- */}
+      <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: "95%", sm: 500 }, // Smaller width than edit modal
+            bgcolor: "#fff",
+            borderRadius: 4,
+            boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
+            outline: "none",
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" /* slight yellow tint for notes */ }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}>
+              <NoteAltIcon /> Customer Notes
+            </Typography>
+            <IconButton onClick={() => setOpenNotes(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={5}
+              maxRows={10}
+              label={notesData.notes ? "Edit Notes" : "Add New Note"}
+              name="notes"
+              value={notesData.notes}
+              onChange={handleNotesChange}
+              placeholder="Type your important notes, reminders, or updates about this customer here..."
+              autoFocus
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "#fafafa",
+                  fontSize: "0.95rem"
+                }
+              }}
+            />
+
+            {/* Action Buttons */}
+            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+              <Button sx={{ color: "#64748b" }} onClick={() => setOpenNotes(false)}>
+                CANCEL
+              </Button>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#d97706", '&:hover': { bgcolor: "#b45309" }, boxShadow: "none", fontWeight: "bold", px: 3 }}
+                onClick={handleNotesSubmit}
+              >
+                SAVE NOTE
+              </Button>
             </Box>
           </Box>
         </Box>
       </Modal>
-
     </Box>
   );
 };

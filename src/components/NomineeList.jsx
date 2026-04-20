@@ -27,6 +27,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add"; // Imported Add Icon
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -39,12 +40,12 @@ const NomineeList = () => {
   // Pagination States
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   // Modal States
   const [open, setOpen] = useState(false); // Edit Modal
   const [viewOpen, setViewOpen] = useState(false); // View Modal
   const [addOpen, setAddOpen] = useState(false); // NEW: Add Modal
-  const [selectedNominee, setSelectedNominee] = useState(null); 
+  const [selectedNominee, setSelectedNominee] = useState(null);
 
   const [editData, setEditData] = useState({
     id: "",
@@ -68,6 +69,41 @@ const NomineeList = () => {
     nominee_email: "",
     nominee_notes: "",
   });
+  // Add this near your other states
+  const [openNotes, setOpenNotes] = useState(false);
+  const [notesData, setNotesData] = useState({ id: "", nominee_notes: "" });
+  // Function to open ONLY the Notes Modal
+  const handleOpenNotesModal = (row) => {
+    setNotesData({
+      id: row.id,
+      nominee_notes: row.nominee_notes || "",
+    });
+    setOpenNotes(true);
+  };
+
+  // Function to SUBMIT ONLY Notes
+  const handleNotesSubmit = async () => {
+    try {
+      // Hum yahan sirf id aur notes bhej rahe hain
+      const payload = {
+        id: notesData.id,
+        nominee_notes: notesData.nominee_notes
+      };
+
+      const res = await axios.post(`${API_BASE}update_nominee.php`, payload);
+
+      if (res.data.status === "success") {
+        Swal.fire("Success!", "Nominee notes saved.", "success");
+        setOpenNotes(false);
+        fetchData();
+      } else {
+        Swal.fire("Error", res.data.message || "Failed to save notes", "error");
+      }
+    } catch (err) {
+      Swal.fire("Error", "Server error while saving notes", "error");
+    }
+  };
+
 
   const API_BASE = "https://lightyellow-mole-663257.hostingersite.com/api/";
 
@@ -117,7 +153,7 @@ const NomineeList = () => {
 
   const handleUpdate = async (isAdd = false) => {
     const payload = isAdd ? addData : editData;
-    
+
     if (isAdd && !payload.id) {
       Swal.fire("Warning", "Please select a customer first", "warning");
       return;
@@ -189,7 +225,7 @@ const NomineeList = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f1f5f9", minHeight: "100vh" }}>
-      
+
       {/* Header Area with Add Button */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
         <Button
@@ -199,10 +235,10 @@ const NomineeList = () => {
         >
           Back to Dashboard
         </Button>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />} 
-          onClick={handleAddOpen} 
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddOpen}
           sx={{ bgcolor: "#004c8f" }}
         >
           Add Nominee
@@ -254,40 +290,44 @@ const NomineeList = () => {
             <TableBody>
               {paginatedNominees.map((row, index) => {
                 const actualIndex = page * rowsPerPage + index + 1;
-                return(
-                <TableRow
-                  key={row.id}
-                  hover
-                  sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
-                >
-                  <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
-                  <TableCell>{row.phone}</TableCell>
-                  <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
-                    {row.nominee_name || "---"}
-                  </TableCell>
-                  <TableCell>{row.nominee_relation || "---"}</TableCell>
-                  <TableCell>
-                    <Box sx={{ fontSize: "0.85rem" }}>
-                      <div><b>ID:</b> {row.nominee_id || "-"}</div>
-                      <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                      <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}>
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" color="primary" onClick={() => handleEditOpen(row)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              )})}
+                return (
+                  <TableRow
+                    key={row.id}
+                    hover
+                    sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
+                  >
+                    <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
+                    <TableCell>{row.phone}</TableCell>
+                    <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
+                      {row.nominee_name || "---"}
+                    </TableCell>
+                    <TableCell>{row.nominee_relation || "---"}</TableCell>
+                    <TableCell>
+                      <Box sx={{ fontSize: "0.85rem" }}>
+                        <div><b>ID:</b> {row.nominee_id || "-"}</div>
+                        <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}>
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="primary" onClick={() => handleEditOpen(row)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" sx={{ color: "#d97706" }} onClick={() => handleOpenNotesModal(row)}>
+                          <NoteAltIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
 
               {paginatedNominees.length === 0 && (
                 <TableRow>
@@ -299,7 +339,7 @@ const NomineeList = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        
+
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
@@ -367,7 +407,7 @@ const NomineeList = () => {
               <TextField label="Nominee Email ID" placeholder="email@example.com" fullWidth value={addData.nominee_email} onChange={(e) => setAddData({ ...addData, nominee_email: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
-               <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={addData.bank_details} onChange={(e) => setAddData({ ...addData, bank_details: e.target.value })} />
+              <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={addData.bank_details} onChange={(e) => setAddData({ ...addData, bank_details: e.target.value })} />
             </Grid>
             <Grid item xs={12}>
               <TextField label="Nominee Dynamic Notes" placeholder="Enter additional information here..." fullWidth multiline minRows={3} value={addData.nominee_notes} onChange={(e) => setAddData({ ...addData, nominee_notes: e.target.value })} />
@@ -375,7 +415,7 @@ const NomineeList = () => {
           </Grid>
 
           <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-             <Button sx={{ color: "#004c8f" }} onClick={() => setAddOpen(false)}>CANCEL</Button>
+            <Button sx={{ color: "#004c8f" }} onClick={() => setAddOpen(false)}>CANCEL</Button>
             <Button variant="contained" onClick={() => handleUpdate(true)} disabled={!addData.id} sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}>
               SAVE NOMINEE
             </Button>
@@ -398,7 +438,7 @@ const NomineeList = () => {
             <IconButton onClick={() => setOpen(false)}><CloseIcon /></IconButton>
           </Box>
           <Divider sx={{ mb: 3 }} />
-          
+
           <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
             NOTE: Please fill necessary fields marked *
           </Typography>
@@ -420,7 +460,7 @@ const NomineeList = () => {
               <TextField label="Nominee Email ID" placeholder="email@example.com" fullWidth value={editData.nominee_email} onChange={(e) => setEditData({ ...editData, nominee_email: e.target.value })} />
             </Grid>
             <Grid item xs={12} sm={6}>
-               <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={editData.bank_details} onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })} />
+              <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={editData.bank_details} onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })} />
             </Grid>
             <Grid item xs={12}>
               <TextField label="Nominee Dynamic Notes" placeholder="Enter additional information here..." fullWidth multiline minRows={3} value={editData.nominee_notes} onChange={(e) => setEditData({ ...editData, nominee_notes: e.target.value })} />
@@ -428,7 +468,7 @@ const NomineeList = () => {
           </Grid>
 
           <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-             <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>BACK</Button>
+            <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>BACK</Button>
             <Button variant="contained" onClick={() => handleUpdate(false)} sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}>
               SAVE & UPDATE
             </Button>
@@ -444,7 +484,7 @@ const NomineeList = () => {
             width: { xs: "95%", sm: 500 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none"
           }}
         >
-           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
               Nominee Details
             </Typography>
@@ -465,7 +505,41 @@ const NomineeList = () => {
           )}
         </Box>
       </Modal>
+      {/* --- QUICK NOTES ONLY MODAL --- */}
+      <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
+        <Box
+          sx={{
+            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+            width: { xs: "95%", sm: 500 }, bgcolor: "#fff", borderRadius: 4, boxShadow: "0 25px 50px rgba(0,0,0,0.2)", outline: "none",
+          }}
+        >
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}>
+              <NoteAltIcon /> Nominee Notes
+            </Typography>
+            <IconButton onClick={() => setOpenNotes(false)}><CloseIcon /></IconButton>
+          </Box>
 
+          <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <TextField
+              fullWidth multiline minRows={5} maxRows={10} autoFocus
+              label={notesData.nominee_notes ? "Edit Notes" : "Add New Note"}
+              name="nominee_notes"
+              value={notesData.nominee_notes}
+              onChange={(e) => setNotesData({ ...notesData, nominee_notes: e.target.value })}
+              placeholder="Type your important notes, reminders, or updates about this nominee here..."
+              sx={{ "& .MuiOutlinedInput-root": { backgroundColor: "#fafafa", fontSize: "0.95rem" } }}
+            />
+
+            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+              <Button sx={{ color: "#64748b" }} onClick={() => setOpenNotes(false)}>CANCEL</Button>
+              <Button variant="contained" sx={{ bgcolor: "#d97706", '&:hover': { bgcolor: "#b45309" }, boxShadow: "none", fontWeight: "bold", px: 3 }} onClick={handleNotesSubmit}>
+                SAVE NOTE
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };
