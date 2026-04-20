@@ -454,8 +454,8 @@ const CustomerList = () => {
               NOTE: Please fill necessary fields marked *
             </Typography>
 
-            <Grid container spacing={{ xs: 2, sm: 3 }}> {/* Responsive Grid Spacing */}
-              {/* Standard Fields: 1 col (Mobile), 2 cols (Tablet), 3 cols (Desktop) */}
+            {/* Grid for standard small inputs */}
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Customer Name *" name="customer_name" value={editData.customer_name || ""} onChange={handleEditChange} />
               </Grid>
@@ -479,27 +479,27 @@ const CustomerList = () => {
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Birth Place" name="birth_place" value={editData.birth_place || ""} onChange={handleEditChange} />
               </Grid>
-
-              {/* DYNAMIC NOTES - Always 100% width */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  maxRows={4}
-                  label="Dynamic Notes"
-                  name="notes"
-                  value={editData.notes || ""}
-                  onChange={handleEditChange}
-                  placeholder="Enter customer notes here..."
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "#f8fafc",
-                    }
-                  }}
-                />
-              </Grid>
             </Grid>
+
+            {/* DYNAMIC NOTES - Kept completely separate from the Grid above to ensure 100% width on a new line */}
+            <Box sx={{ width: "100%", mt: { xs: 2, sm: 3 } }}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                maxRows={5}
+                label="Dynamic Notes"
+                name="notes"
+                value={editData.notes || ""}
+                onChange={handleEditChange}
+                placeholder="Enter customer notes here..."
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f8fafc",
+                  }
+                }}
+              />
+            </Box>
 
             {/* Action Buttons - Stack vertically on small screens */}
             <Box sx={{ mt: 4, display: "flex", flexDirection: { xs: "column-reverse", sm: "row" }, gap: 2, justifyContent: "space-between", alignItems: "center" }}>
