@@ -432,7 +432,7 @@ const CustomerList = () => {
             transform: "translate(-50%, -50%)",
             width: { xs: "95%", sm: "85%", md: 900 }, // Responsive Modal Width
             bgcolor: "#fff",
-            borderRadius: 4,
+            // borderRadius: 4,
             boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
             maxHeight: "90vh",
             overflowY: "auto",
@@ -514,6 +514,7 @@ const CustomerList = () => {
           </Box>
         </Box>
       </Modal>
+
       {/* --- QUICK NOTES MODAL --- */}
       <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
         <Box
@@ -522,15 +523,18 @@ const CustomerList = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: "85%", md: 900 },
+            width: { xs: "95%", sm: "85%", md: 900 }, // Edit modal jitni width
+            minHeight: { md: "60vh" }, // Edit modal jitni minimum height
             bgcolor: "#fff",
-            borderRadius: 4,
+            // borderRadius: 4,
             boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
             outline: "none",
+            display: "flex",
+            flexDirection: "column"
           }}
         >
           {/* Header */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" /* slight yellow tint for notes */ }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}>
               <NoteAltIcon /> Customer Notes
             </Typography>
@@ -539,12 +543,13 @@ const CustomerList = () => {
             </IconButton>
           </Box>
 
-          <Box sx={{ p: { xs: 2, sm: 3 } }}>
+          {/* Form Content */}
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, flexGrow: 1, display: "flex", flexDirection: "column" }}>
             <TextField
               fullWidth
               multiline
-              minRows={5}
-              maxRows={10}
+              minRows={12} // Height badha kar Edit modal jitni kar di hai
+              maxRows={28}
               label={notesData.notes ? "Edit Notes" : "Add New Note"}
               name="notes"
               value={notesData.notes}
@@ -552,21 +557,23 @@ const CustomerList = () => {
               placeholder="Type your important notes, reminders, or updates about this customer here..."
               autoFocus
               sx={{
+                flexGrow: 1, // Taki ye baaki bachi jagah cover kar le
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "#fafafa",
-                  fontSize: "0.95rem"
+                  fontSize: "1rem",
+                  alignItems: "flex-start" // Taki text upar se start ho
                 }
               }}
             />
 
             {/* Action Buttons */}
-            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>
               <Button sx={{ color: "#64748b" }} onClick={() => setOpenNotes(false)}>
                 CANCEL
               </Button>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#d97706", '&:hover': { bgcolor: "#b45309" }, boxShadow: "none", fontWeight: "bold", px: 3 }}
+                sx={{ bgcolor: "#d97706", '&:hover': { bgcolor: "#b45309" }, boxShadow: "none", fontWeight: "bold", px: 4, py: 1 }}
                 onClick={handleNotesSubmit}
               >
                 SAVE NOTE

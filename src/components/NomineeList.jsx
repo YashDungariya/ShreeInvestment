@@ -509,8 +509,18 @@ const NomineeList = () => {
       <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
         <Box
           sx={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: "85%", md: 900 }, bgcolor: "#fff", borderRadius: 4, boxShadow: "0 25px 50px rgba(0,0,0,0.2)", outline: "none",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: "95%", sm: "85%", md: 900 }, // Edit modal jitni width
+            minHeight: { md: "50vh" }, // Edit modal jitni minimum height
+            bgcolor: "#fff",
+            // borderRadius: 4,
+            boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
+            outline: "none",
+            display: "flex",
+            flexDirection: "column"
           }}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
