@@ -18,7 +18,8 @@ import {
   Stack,
   Grid,
   TablePagination,
-  MenuItem // Imported for Dropdown
+  MenuItem // Imported for Dropdown,
+  , Chip
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
@@ -46,6 +47,7 @@ const NomineeList = () => {
   const [viewOpen, setViewOpen] = useState(false); // View Modal
   const [addOpen, setAddOpen] = useState(false); // NEW: Add Modal
   const [selectedNominee, setSelectedNominee] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const [editData, setEditData] = useState({
     id: "",
@@ -113,8 +115,7 @@ const NomineeList = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${API_BASE}get_customers.php`);
-      setCustomers(res.data);
+      const res = await axios.get(`${API_BASE}get_customers.php`); setCustomers(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -146,8 +147,8 @@ const NomineeList = () => {
     setOpen(true);
   };
 
-  const handleViewOpen = (row) => {
-    setSelectedNominee(row);
+  const handleViewOpen = (customer) => {
+    setSelectedCustomer(customer);
     setViewOpen(true);
   };
 
@@ -198,11 +199,10 @@ const NomineeList = () => {
     }
   };
 
-  const filteredNominees = customers.filter(
+  const filteredCustomers = customers.filter(
     (item) =>
       item.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.phone?.includes(searchTerm) ||
-      item.nominee_name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.phone?.includes(searchTerm)
   );
 
   useEffect(() => {
@@ -218,7 +218,7 @@ const NomineeList = () => {
     setPage(0);
   };
 
-  const paginatedNominees = filteredNominees.slice(
+  const paginatedCustomers = filteredCustomers.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
@@ -245,34 +245,21 @@ const NomineeList = () => {
         </Button>
       </Box>
 
-      {/* Search Bar */}
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Search by Customer, Phone or Nominee..."
+          placeholder="Search by Customer Name or Phone..."
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{
             bgcolor: "white",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-              "& fieldset": { borderColor: "#e2e8f0" },
-              "&:hover fieldset": { borderColor: "#004c8f" },
-            },
+            "& .MuiOutlinedInput-root": { borderRadius: "8px", "& fieldset": { borderColor: "#e2e8f0" }, "&:hover fieldset": { borderColor: "#004c8f" } }
           }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "#94a3b8" }} />
-              </InputAdornment>
-            ),
-            sx: { height: "50px" },
-          }}
+          InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: "#94a3b8" }} /></InputAdornment>), sx: { height: "50px" } }}
         />
       </Box>
 
-      {/* Table & Pagination */}
       <Paper sx={{ borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
         <TableContainer>
           <Table sx={{ minWidth: 900 }}>
@@ -281,59 +268,40 @@ const NomineeList = () => {
                 <TableCell sx={{ color: "white", fontWeight: "bold", width: "5%" }}>SR.</TableCell>
                 <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER NAME</TableCell>
                 <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER PHONE</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE NAME</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>RELATIONSHIP</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE INFO</TableCell>
-                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>ACTION</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }} align="center">TOTAL NOMINEES</TableCell>
+                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>VIEW NOMINEES</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedNominees.map((row, index) => {
+              {paginatedCustomers.map((row, index) => {
                 const actualIndex = page * rowsPerPage + index + 1;
+                const nomineesCount = row.nominees ? row.nominees.length : 0;
+
                 return (
-                  <TableRow
-                    key={row.id}
-                    hover
-                    sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}
-                  >
+                  <TableRow key={row.id} hover sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}>
                     <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
                     <TableCell>{row.phone}</TableCell>
-                    <TableCell sx={{ color: "#004c8f", fontWeight: 700 }}>
-                      {row.nominee_name || "---"}
-                    </TableCell>
-                    <TableCell>{row.nominee_relation || "---"}</TableCell>
-                    <TableCell>
-                      <Box sx={{ fontSize: "0.85rem" }}>
-                        <div><b>ID:</b> {row.nominee_id || "-"}</div>
-                        <div><b>Ph:</b> {row.nominee_contact || "-"}</div>
-                      </Box>
+                    <TableCell align="center">
+                      <Chip
+                        label={`${nomineesCount} Nominee(s)`}
+                        color={nomineesCount > 0 ? "success" : "default"}
+                        size="small"
+                        sx={{ fontWeight: "bold" }}
+                      />
                     </TableCell>
                     <TableCell align="center">
-                      <Stack direction="row" spacing={1} justifyContent="center">
-                        <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}>
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="primary" onClick={() => handleEditOpen(row)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" sx={{ color: "#d97706" }} onClick={() => handleOpenNotesModal(row)}>
-                          <NoteAltIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
+                      <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}>
+                        <VisibilityIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 )
               })}
 
-              {paginatedNominees.length === 0 && (
+              {paginatedCustomers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 5, color: "#94a3b8" }}>
-                    No records found matching "{searchTerm}"
-                  </TableCell>
+                  <TableCell colSpan={5} align="center" sx={{ py: 5, color: "#94a3b8" }}>No records found</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -343,7 +311,7 @@ const NomineeList = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredNominees.length}
+          count={filteredCustomers.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -476,33 +444,62 @@ const NomineeList = () => {
         </Box>
       </Modal>
 
-      {/* --- VIEW NOMINEE MODAL --- */}
       <Modal open={viewOpen} onClose={() => setViewOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: 500 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none"
-          }}
-        >
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: 700 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, outline: "none", maxHeight: "90vh", overflowY: "auto" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", position: "sticky", top: 0, bgcolor: "white", zIndex: 10 }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
-              Nominee Details
+              Nominees for {selectedCustomer?.customer_name}
             </Typography>
             <IconButton onClick={() => setViewOpen(false)}><CloseIcon /></IconButton>
           </Box>
-          <Divider sx={{ mb: 3 }} />
 
-          {selectedNominee && (
-            <Stack spacing={2}>
-              <Box><Typography variant="caption" color="text.secondary">Nominee Name</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_name || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Relationship</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_relation || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">PAN / Aadhaar</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_id || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Contact Number</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_contact || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Email ID</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_email || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Bank Details</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.bank_details || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Notes</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_notes || "N/A"}</Typography></Box>
-            </Stack>
-          )}
+          <Box sx={{ p: 4 }}>
+            {selectedCustomer && selectedCustomer.nominees && selectedCustomer.nominees.length > 0 ? (
+              selectedCustomer.nominees.map((nominee, idx) => (
+                <Box key={idx} sx={{ mb: 4, p: 3, border: "1px solid #e2e8f0", borderRadius: 2, bgcolor: "#fafcff" }}>
+                  <Typography variant="subtitle1" fontWeight="bold" color="#ff8c00" mb={2}>
+                    Nominee {idx + 1}: {nominee.nominee_name}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">Relationship</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_relation || "N/A"}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">ID / PAN / Aadhaar</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_id || "N/A"}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">Contact Number</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_contact || "N/A"}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">Email ID</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_email || "N/A"}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">Bank Details</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.bank_details || "N/A"}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">Notes</Typography>
+                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_notes || "N/A"}</Typography>
+                    </Grid>
+                  </Grid>
+
+                  {/* Document Buttons for Nominee */}
+                  <Box sx={{ mt: 3, pt: 2, borderTop: "1px dashed #eee", display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {nominee.nominee_doc_photo && <Button variant="outlined" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_photo}`)}>Photo</Button>}
+                    {nominee.nominee_doc_id_proof && <Button variant="outlined" color="success" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_id_proof}`)}>ID Proof</Button>}
+                    {nominee.nominee_doc_pan && <Button variant="outlined" color="warning" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_pan}`)}>PAN</Button>}
+                    {nominee.nominee_doc_bank && <Button variant="outlined" color="error" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_bank}`)}>Bank</Button>}
+                  </Box>
+                </Box>
+              ))
+            ) : (
+              <Typography sx={{ textAlign: "center", color: "gray", py: 4 }}>No nominees added for this customer.</Typography>
+            )}
+          </Box>
         </Box>
       </Modal>
       {/* --- QUICK NOTES ONLY MODAL --- */}

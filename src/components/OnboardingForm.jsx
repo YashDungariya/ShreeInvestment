@@ -285,9 +285,9 @@ const OnboardingForm = () => {
           {activeStep === 2 && (
             <DocumentUpload
               handleFileChange={handleFileChange}
-              handleNomineeFileChange={handleNomineeFileChange} // NAYA PROP
+              handleNomineeFileChange={handleNomineeFileChange} // NAYA: Multiple files handle karne ke liye
               files={files}
-              nomineesData={formData.nominees} // NAYA PROP (kitne block dikhane hain ye batane ke liye)
+              nomineesData={formData.nominees} // NAYA: Nominees ki ginti batane ke liye
             />
           )}
         </Box>
