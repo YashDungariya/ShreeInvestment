@@ -55,21 +55,22 @@ const OnboardingForm = () => {
     nominees: [] // Nominee files yahan aayengi
   });
 
-  // 2. Naya Handler banayein SPECIFICALLY nominee files ke liye
+ // 2. Naya Handler banayein SPECIFICALLY nominee files ke liye
   const handleNomineeFileChange = (e, fieldName, nomineeIndex) => {
-    const updatedNomineeFiles = [...(files.nominees || [])];
+    // Array ki deep copy banayein
+    const updatedNomineeFiles = [...files.nominees];
 
-    // Agar us index pe koi object nahi hai, toh pehle empty object banao
+    // Agar us index pe koi object nahi hai, toh empty object initialize karo
     if (!updatedNomineeFiles[nomineeIndex]) {
       updatedNomineeFiles[nomineeIndex] = {};
     }
 
-    // File store karo
+    // File ko us specific index aur field me save karo
     updatedNomineeFiles[nomineeIndex][fieldName] = e.target.files[0];
 
+    // State update karo
     setFiles({ ...files, nominees: updatedNomineeFiles });
   };
-
   // 3. purana handler waise ka waisa rakhne dein (sirf Customer ke liye)
   const handleFileChange = (e, fieldName) => {
     setFiles({ ...files, [fieldName]: e.target.files[0] });
@@ -108,11 +109,11 @@ const OnboardingForm = () => {
       if (files.panDoc) data.append("panDoc", files.panDoc);
       if (files.bankDoc) data.append("bankDoc", files.bankDoc);
 
-      // NOMINEE FILES - Naya Bullet-proof logic
-      if (files.nominees && files.nominees.length > 0) {
+      // NOMINEE FILES - Bullet-proof logic
+      if (files.nominees && Array.isArray(files.nominees)) {
         files.nominees.forEach((nomFileObj, index) => {
-          if (nomFileObj) {
-            // Bracket [] ki jagah underscore _ use kar rahe hain
+          // Check karo ki object exist karta hai
+          if (nomFileObj && typeof nomFileObj === 'object') {
             if (nomFileObj.nomineeIdProof) data.append(`nomineeIdProof_${index}`, nomFileObj.nomineeIdProof);
             if (nomFileObj.nomineePhoto) data.append(`nomineePhoto_${index}`, nomFileObj.nomineePhoto);
             if (nomFileObj.nomineePanDoc) data.append(`nomineePanDoc_${index}`, nomFileObj.nomineePanDoc);

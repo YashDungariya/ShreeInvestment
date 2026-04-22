@@ -1,25 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  InputAdornment,
-  Typography,
-  IconButton,
-  Modal,
-  Divider,
-  Stack,
-  Grid,
-  TablePagination,
-  MenuItem // Imported for Dropdown,
-  , Chip
+  Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, TextField, InputAdornment, Typography, IconButton, Modal, Divider, Stack,
+  Grid, TablePagination, Avatar
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,7 +10,6 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add"; // Imported Add Icon
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -35,65 +17,115 @@ import Swal from "sweetalert2";
 
 const NomineeList = () => {
   const navigate = useNavigate();
-  const [customers, setCustomers] = useState([]);
+  // Hum ab seedhe nominees ki flat list store karenge
+  const [nomineesList, setNomineesList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Pagination States
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Modal States
-  const [open, setOpen] = useState(false); // Edit Modal
-  const [viewOpen, setViewOpen] = useState(false); // View Modal
-  const [addOpen, setAddOpen] = useState(false); // NEW: Add Modal
-  const [selectedNominee, setSelectedNominee] = useState(null);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-
-  const [editData, setEditData] = useState({
-    id: "",
-    nominee_name: "",
-    nominee_relation: "",
-    nominee_id: "",
-    nominee_contact: "",
-    bank_details: "",
-    nominee_email: "",
-    nominee_notes: "",
-  });
-
-  // State for Add Nominee Form
-  const [addData, setAddData] = useState({
-    id: "", // Customer ID
-    nominee_name: "",
-    nominee_relation: "",
-    nominee_id: "",
-    nominee_contact: "",
-    bank_details: "",
-    nominee_email: "",
-    nominee_notes: "",
-  });
-  // Add this near your other states
+  // Modals state
+  const [viewOpen, setViewOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [openNotes, setOpenNotes] = useState(false);
+  
+  const [selectedNominee, setSelectedNominee] = useState(null);
+  const [editData, setEditData] = useState({});
   const [notesData, setNotesData] = useState({ id: "", nominee_notes: "" });
-  // Function to open ONLY the Notes Modal
-  const handleOpenNotesModal = (row) => {
+
+  const API_BASE = "https://shreeinvestment.in/api/";
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}get_customers.php`);
+      
+      // Flat list logic: Customers ke andar se saare nominees nikal kar ek simple array banayenge
+      let flatNominees = [];
+      if (res.data && Array.isArray(res.data)) {
+        res.data.forEach(customer => {
+          if (customer.nominees && customer.nominees.length > 0) {
+            customer.nominees.forEach(nom => {
+              flatNominees.push({
+                ...nom,
+                // UI mein dikhane ke liye parent customer ka naam aur phone add kar rahe hain
+                parent_customer_name: customer.customer_name,
+                parent_customer_phone: customer.phone
+              });
+            });
+          }
+        });
+      }
+      setNomineesList(flatNominees);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Searching logic for the flat list
+  const filteredNominees = nomineesList.filter(
+    (item) =>
+      item.nominee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.parent_customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.parent_customer_phone?.includes(searchTerm)
+  );
+
+  useEffect(() => { setPage(0); }, [searchTerm]);
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); };
+
+  const paginatedNominees = filteredNominees.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  // Actions
+  const handleViewOpen = (nominee) => {
+    setSelectedNominee(nominee);
+    setViewOpen(true);
+  };
+
+  const handleEditOpen = (nominee) => {
+    setEditData({
+      id: nominee.id,
+      nominee_name: nominee.nominee_name || "",
+      nominee_relation: nominee.nominee_relation || "",
+      nominee_id: nominee.nominee_id || "",
+      nominee_contact: nominee.nominee_contact || "",
+      bank_details: nominee.bank_details || "",
+      nominee_email: nominee.nominee_email || "",
+      nominee_notes: nominee.nominee_notes || "",
+    });
+    setOpenEdit(true);
+  };
+
+  const handleOpenNotesModal = (nominee) => {
     setNotesData({
-      id: row.id,
-      nominee_notes: row.nominee_notes || "",
+      id: nominee.id,
+      nominee_notes: nominee.nominee_notes || "",
     });
     setOpenNotes(true);
   };
 
-  // Function to SUBMIT ONLY Notes
+  const handleUpdate = async () => {
+    try {
+      const res = await axios.post(`${API_BASE}update_nominee.php`, editData);
+      if (res.data.status === "success") {
+        Swal.fire("Success!", "Nominee details updated.", "success");
+        setOpenEdit(false);
+        fetchData();
+      } else {
+        Swal.fire("Error", res.data.message || "Failed to save", "error");
+      }
+    } catch (err) {
+      Swal.fire("Error", "Server connection error", "error");
+    }
+  };
+
   const handleNotesSubmit = async () => {
     try {
-      // Hum yahan sirf id aur notes bhej rahe hain
-      const payload = {
-        id: notesData.id,
-        nominee_notes: notesData.nominee_notes
-      };
-
+      const payload = { id: notesData.id, nominee_notes: notesData.nominee_notes };
       const res = await axios.post(`${API_BASE}update_nominee.php`, payload);
-
       if (res.data.status === "success") {
         Swal.fire("Success!", "Nominee notes saved.", "success");
         setOpenNotes(false);
@@ -106,448 +138,168 @@ const NomineeList = () => {
     }
   };
 
-
-  const API_BASE = "https://shreeinvestment.in/api/";
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}get_customers.php`); setCustomers(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Filter out customers who already have a nominee for the "Add Nominee" dropdown
-  const customersWithoutNominee = customers.filter(
-    (c) => !c.nominee_name || c.nominee_name.trim() === ""
-  );
-
-  const handleAddOpen = () => {
-    setAddData({
-      id: "", nominee_name: "", nominee_relation: "", nominee_id: "", nominee_contact: "", bank_details: "", nominee_email: "", nominee_notes: "",
-    });
-    setAddOpen(true);
-  };
-
-  const handleEditOpen = (row) => {
-    setEditData({
-      id: row.id,
-      nominee_name: row.nominee_name || "",
-      nominee_relation: row.nominee_relation || "",
-      nominee_id: row.nominee_id || "",
-      nominee_contact: row.nominee_contact || "",
-      bank_details: row.bank_details || "",
-      nominee_email: row.nominee_email || "",
-      nominee_notes: row.nominee_notes || "",
-    });
-    setOpen(true);
-  };
-
-  const handleViewOpen = (customer) => {
-    setSelectedCustomer(customer);
-    setViewOpen(true);
-  };
-
-  const handleUpdate = async (isAdd = false) => {
-    const payload = isAdd ? addData : editData;
-
-    if (isAdd && !payload.id) {
-      Swal.fire("Warning", "Please select a customer first", "warning");
-      return;
-    }
-
-    try {
-      const res = await axios.post(`${API_BASE}update_nominee.php`, payload);
-
-      if (res.data.status === "success") {
-        Swal.fire("Success!", isAdd ? "Nominee added successfully." : "Nominee details updated.", "success");
-        if (isAdd) setAddOpen(false);
-        else setOpen(false);
-        fetchData();
-      } else {
-        Swal.fire("Error", res.data.message || "Failed to save", "error");
-      }
-    } catch (err) {
-      Swal.fire("Error", "Server connection error", "error");
-    }
-  };
-
   const handleDelete = async (id) => {
     const result = await Swal.fire({
-      title: "Remove Nominee?",
-      text: "This will clear nominee data for this customer.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, Clear It",
+      title: "Remove Nominee?", text: "This will permanently delete this nominee.", icon: "warning",
+      showCancelButton: true, confirmButtonColor: "#d33", confirmButtonText: "Yes, Delete"
     });
 
     if (result.isConfirmed) {
       try {
         const res = await axios.post(`${API_BASE}delete_nominee.php`, { id });
         if (res.data.status === "success") {
-          Swal.fire("Cleared!", "Nominee data removed.", "success");
+          Swal.fire("Deleted!", "Nominee data removed.", "success");
           fetchData();
         }
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (item) =>
-      item.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.phone?.includes(searchTerm)
-  );
-
-  useEffect(() => {
-    setPage(0);
-  }, [searchTerm]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const paginatedCustomers = filteredCustomers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f1f5f9", minHeight: "100vh" }}>
-
-      {/* Header Area with Add Button */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/dashboard")}
-          sx={{ color: "#475569", fontWeight: "bold" }}
-        >
-          Back to Dashboard
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddOpen}
-          sx={{ bgcolor: "#004c8f" }}
-        >
-          Add Nominee
-        </Button>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/dashboard")} sx={{ color: "#475569", fontWeight: "bold" }}>Back to Dashboard</Button>
       </Box>
 
       <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder="Search by Customer Name or Phone..."
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{
-            bgcolor: "white",
-            "& .MuiOutlinedInput-root": { borderRadius: "8px", "& fieldset": { borderColor: "#e2e8f0" }, "&:hover fieldset": { borderColor: "#004c8f" } }
-          }}
-          InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: "#94a3b8" }} /></InputAdornment>), sx: { height: "50px" } }}
+        <TextField 
+          fullWidth 
+          placeholder="Search by Nominee Name, Customer Name or Phone..." 
+          variant="outlined" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          sx={{ bgcolor: "white", "& .MuiOutlinedInput-root": { borderRadius: "8px", "& fieldset": { borderColor: "#e2e8f0" }, "&:hover fieldset": { borderColor: "#004c8f" } } }} 
+          InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: "#94a3b8" }} /></InputAdornment>), sx: { height: "50px" } }} 
         />
       </Box>
 
       <Paper sx={{ borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
         <TableContainer>
-          <Table sx={{ minWidth: 900 }}>
+          <Table sx={{ minWidth: 1000 }}>
             <TableHead sx={{ bgcolor: "#004c8f" }}>
               <TableRow>
                 <TableCell sx={{ color: "white", fontWeight: "bold", width: "5%" }}>SR.</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER NAME</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER PHONE</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: "bold" }} align="center">TOTAL NOMINEES</TableCell>
-                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>VIEW NOMINEES</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>NOMINEE DETAILS</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CUSTOMER (PARENT)</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>RELATIONSHIP</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold" }}>CONTACT</TableCell>
+                <TableCell align="center" sx={{ color: "white", fontWeight: "bold" }}>ACTIONS</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedCustomers.map((row, index) => {
+              {paginatedNominees.map((row, index) => {
                 const actualIndex = page * rowsPerPage + index + 1;
-                const nomineesCount = row.nominees ? row.nominees.length : 0;
-
                 return (
                   <TableRow key={row.id} hover sx={{ bgcolor: index % 2 === 0 ? "#ffffff" : "#fdfdfd" }}>
                     <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{row.customer_name}</TableCell>
-                    <TableCell>{row.phone}</TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={`${nomineesCount} Nominee(s)`}
-                        color={nomineesCount > 0 ? "success" : "default"}
-                        size="small"
-                        sx={{ fontWeight: "bold" }}
-                      />
+                    
+                    {/* Nominee Details Column */}
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Avatar sx={{ bgcolor: "#ff8c00", fontSize: "14px", width: 32, height: 32 }}>
+                          {row.nominee_name?.charAt(0) || "N"}
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: "#004c8f" }}>
+                          {row.nominee_name}
+                        </Typography>
+                      </Box>
                     </TableCell>
-                    <TableCell align="center">
-                      <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}>
-                        <VisibilityIcon />
-                      </IconButton>
+
+                    {/* Customer Parent Column */}
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: "bold" }}>{row.parent_customer_name}</Typography>
+                      <Typography variant="caption" sx={{ color: "gray" }}>Ph: {row.parent_customer_phone}</Typography>
+                    </TableCell>
+
+                    <TableCell>{row.nominee_relation || "---"}</TableCell>
+                    <TableCell>{row.nominee_contact || "---"}</TableCell>
+                    
+                    <TableCell align="left">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <IconButton size="small" color="info" onClick={() => handleViewOpen(row)}><VisibilityIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="primary" onClick={() => handleEditOpen(row)}><EditIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" sx={{ color: "#d97706" }} onClick={() => handleOpenNotesModal(row)}><NoteAltIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}><DeleteIcon fontSize="small" /></IconButton>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 )
               })}
-
-              {paginatedCustomers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 5, color: "#94a3b8" }}>No records found</TableCell>
-                </TableRow>
+              {paginatedNominees.length === 0 && (
+                <TableRow><TableCell colSpan={6} align="center" sx={{ py: 5, color: "#94a3b8" }}>No nominees found matching your search</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         </TableContainer>
 
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={filteredCustomers.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          sx={{ borderTop: "1px solid #e2e8f0" }}
-        />
+        <TablePagination rowsPerPageOptions={[5, 10, 25, 50]} component="div" count={filteredNominees.length} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} sx={{ borderTop: "1px solid #e2e8f0" }} />
       </Paper>
 
-      {/* --- ADD NOMINEE MODAL --- */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: 600, md: 800 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none"
-          }}
-        >
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
-              Add New Nominee
-            </Typography>
-            <IconButton onClick={() => setAddOpen(false)}><CloseIcon /></IconButton>
-          </Box>
-          <Divider sx={{ mb: 3 }} />
-
-          <Grid container spacing={3}>
-            {/* Customer Selection Dropdown */}
-            <Grid item xs={12}>
-              <TextField
-                select
-                label="Select Customer *"
-                fullWidth
-                value={addData.id}
-                onChange={(e) => setAddData({ ...addData, id: e.target.value })}
-                helperText="Only showing customers who do not have a nominee yet."
-              >
-                {customersWithoutNominee.length === 0 && (
-                  <MenuItem disabled value="">No pending customers available</MenuItem>
-                )}
-                {customersWithoutNominee.map((customer) => (
-                  <MenuItem key={customer.id} value={customer.id}>
-                    {customer.customer_name} (Ph: {customer.phone})
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            {/* Form Fields */}
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Name *" placeholder="Nominee's full name" fullWidth value={addData.nominee_name} onChange={(e) => setAddData({ ...addData, nominee_name: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Relationship *" placeholder="e.g. Spouse, Father" fullWidth value={addData.nominee_relation} onChange={(e) => setAddData({ ...addData, nominee_relation: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee PAN / Aadhaar" placeholder="Enter ID Number" fullWidth value={addData.nominee_id} onChange={(e) => setAddData({ ...addData, nominee_id: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Contact Number" placeholder="Phone Number" fullWidth value={addData.nominee_contact} onChange={(e) => setAddData({ ...addData, nominee_contact: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Email ID" placeholder="email@example.com" fullWidth value={addData.nominee_email} onChange={(e) => setAddData({ ...addData, nominee_email: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={addData.bank_details} onChange={(e) => setAddData({ ...addData, bank_details: e.target.value })} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Nominee Dynamic Notes" placeholder="Enter additional information here..." fullWidth multiline minRows={3} value={addData.nominee_notes} onChange={(e) => setAddData({ ...addData, nominee_notes: e.target.value })} />
-            </Grid>
-          </Grid>
-
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Button sx={{ color: "#004c8f" }} onClick={() => setAddOpen(false)}>CANCEL</Button>
-            <Button variant="contained" onClick={() => handleUpdate(true)} disabled={!addData.id} sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}>
-              SAVE NOMINEE
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
-
       {/* --- EDIT NOMINEE MODAL --- */}
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: 600, md: 800 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none"
-          }}
-        >
+      <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: 600, md: 800 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
-              Edit Nominee Details
-            </Typography>
-            <IconButton onClick={() => setOpen(false)}><CloseIcon /></IconButton>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>Edit Nominee Details</Typography>
+            <IconButton onClick={() => setOpenEdit(false)}><CloseIcon /></IconButton>
           </Box>
           <Divider sx={{ mb: 3 }} />
-
-          <Typography variant="body2" sx={{ color: "error.main", fontWeight: "bold", mb: 3, fontStyle: "italic" }}>
-            NOTE: Please fill necessary fields marked *
-          </Typography>
-
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Name *" placeholder="Nominee's full name" fullWidth value={editData.nominee_name} onChange={(e) => setEditData({ ...editData, nominee_name: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Relationship *" placeholder="e.g. Spouse, Father" fullWidth value={editData.nominee_relation} onChange={(e) => setEditData({ ...editData, nominee_relation: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee PAN / Aadhaar" placeholder="Enter ID Number" fullWidth value={editData.nominee_id} onChange={(e) => setEditData({ ...editData, nominee_id: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Contact Number" placeholder="Phone Number" fullWidth value={editData.nominee_contact} onChange={(e) => setEditData({ ...editData, nominee_contact: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Nominee Email ID" placeholder="email@example.com" fullWidth value={editData.nominee_email} onChange={(e) => setEditData({ ...editData, nominee_email: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Bank Details (Cheque / Passbook)" placeholder="Account No, IFSC, Bank Name" fullWidth value={editData.bank_details} onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Nominee Dynamic Notes" placeholder="Enter additional information here..." fullWidth multiline minRows={3} value={editData.nominee_notes} onChange={(e) => setEditData({ ...editData, nominee_notes: e.target.value })} />
-            </Grid>
+            <Grid item xs={12} sm={6}><TextField label="Nominee Name *" fullWidth value={editData.nominee_name} onChange={(e) => setEditData({ ...editData, nominee_name: e.target.value })} /></Grid>
+            <Grid item xs={12} sm={6}><TextField label="Nominee Relationship *" fullWidth value={editData.nominee_relation} onChange={(e) => setEditData({ ...editData, nominee_relation: e.target.value })} /></Grid>
+            <Grid item xs={12} sm={6}><TextField label="Nominee PAN / Aadhaar" fullWidth value={editData.nominee_id} onChange={(e) => setEditData({ ...editData, nominee_id: e.target.value })} /></Grid>
+            <Grid item xs={12} sm={6}><TextField label="Nominee Contact Number" fullWidth value={editData.nominee_contact} onChange={(e) => setEditData({ ...editData, nominee_contact: e.target.value })} /></Grid>
+            <Grid item xs={12} sm={6}><TextField label="Nominee Email ID" fullWidth value={editData.nominee_email} onChange={(e) => setEditData({ ...editData, nominee_email: e.target.value })} /></Grid>
+            <Grid item xs={12} sm={6}><TextField label="Bank Details" fullWidth value={editData.bank_details} onChange={(e) => setEditData({ ...editData, bank_details: e.target.value })} /></Grid>
+            <Grid item xs={12}><TextField label="Notes" fullWidth multiline minRows={3} value={editData.nominee_notes} onChange={(e) => setEditData({ ...editData, nominee_notes: e.target.value })} /></Grid>
           </Grid>
-
           <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Button sx={{ color: "#004c8f" }} onClick={() => setOpen(false)}>BACK</Button>
-            <Button variant="contained" onClick={() => handleUpdate(false)} sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold", boxShadow: "none" }}>
-              SAVE & UPDATE
-            </Button>
+            <Button sx={{ color: "#004c8f" }} onClick={() => setOpenEdit(false)}>CANCEL</Button>
+            <Button variant="contained" onClick={handleUpdate} sx={{ bgcolor: "#004c8f", px: 4, fontWeight: "bold" }}>SAVE</Button>
           </Box>
         </Box>
       </Modal>
 
-      <Modal open={viewOpen} onClose={() => setViewOpen(false)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: 700 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, outline: "none", maxHeight: "90vh", overflowY: "auto" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", position: "sticky", top: 0, bgcolor: "white", zIndex: 10 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>
-              Nominees for {selectedCustomer?.customer_name}
-            </Typography>
-            <IconButton onClick={() => setViewOpen(false)}><CloseIcon /></IconButton>
-          </Box>
-
-          <Box sx={{ p: 4 }}>
-            {selectedCustomer && selectedCustomer.nominees && selectedCustomer.nominees.length > 0 ? (
-              selectedCustomer.nominees.map((nominee, idx) => (
-                <Box key={idx} sx={{ mb: 4, p: 3, border: "1px solid #e2e8f0", borderRadius: 2, bgcolor: "#fafcff" }}>
-                  <Typography variant="subtitle1" fontWeight="bold" color="#ff8c00" mb={2}>
-                    Nominee {idx + 1}: {nominee.nominee_name}
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">Relationship</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_relation || "N/A"}</Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">ID / PAN / Aadhaar</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_id || "N/A"}</Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">Contact Number</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_contact || "N/A"}</Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">Email ID</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_email || "N/A"}</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="caption" color="text.secondary">Bank Details</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.bank_details || "N/A"}</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="caption" color="text.secondary">Notes</Typography>
-                      <Typography variant="body2" fontWeight={600}>{nominee.nominee_notes || "N/A"}</Typography>
-                    </Grid>
-                  </Grid>
-
-                  {/* Document Buttons for Nominee */}
-                  <Box sx={{ mt: 3, pt: 2, borderTop: "1px dashed #eee", display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {nominee.nominee_doc_photo && <Button variant="outlined" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_photo}`)}>Photo</Button>}
-                    {nominee.nominee_doc_id_proof && <Button variant="outlined" color="success" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_id_proof}`)}>ID Proof</Button>}
-                    {nominee.nominee_doc_pan && <Button variant="outlined" color="warning" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_pan}`)}>PAN</Button>}
-                    {nominee.nominee_doc_bank && <Button variant="outlined" color="error" size="small" onClick={() => window.open(`${API_BASE}uploads/${nominee.nominee_doc_bank}`)}>Bank</Button>}
-                  </Box>
-                </Box>
-              ))
-            ) : (
-              <Typography sx={{ textAlign: "center", color: "gray", py: 4 }}>No nominees added for this customer.</Typography>
-            )}
-          </Box>
-        </Box>
-      </Modal>
-      {/* --- QUICK NOTES ONLY MODAL --- */}
+      {/* --- QUICK NOTES MODAL --- */}
       <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: "85%", md: 900 }, // Edit modal jitni width
-            minHeight: { md: "50vh" }, // Edit modal jitni minimum height
-            bgcolor: "#fff",
-            // borderRadius: 4,
-            boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
-            outline: "none",
-            display: "flex",
-            flexDirection: "column"
-          }}
-        >
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}>
-              <NoteAltIcon /> Nominee Notes
-            </Typography>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: "85%", md: 600 }, bgcolor: "#fff", boxShadow: 24, outline: "none", display: "flex", flexDirection: "column" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}><NoteAltIcon /> Nominee Notes</Typography>
             <IconButton onClick={() => setOpenNotes(false)}><CloseIcon /></IconButton>
           </Box>
-
-          <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <TextField
-              fullWidth multiline minRows={5} maxRows={10} autoFocus
-              label={notesData.nominee_notes ? "Edit Notes" : "Add New Note"}
-              name="nominee_notes"
-              value={notesData.nominee_notes}
-              onChange={(e) => setNotesData({ ...notesData, nominee_notes: e.target.value })}
-              placeholder="Type your important notes, reminders, or updates about this nominee here..."
-              sx={{ "& .MuiOutlinedInput-root": { backgroundColor: "#fafafa", fontSize: "0.95rem" } }}
-            />
-
+          <Box sx={{ p: 3 }}>
+            <TextField fullWidth multiline minRows={5} maxRows={10} autoFocus label="Edit Notes" value={notesData.nominee_notes} onChange={(e) => setNotesData({ ...notesData, nominee_notes: e.target.value })} sx={{ "& .MuiOutlinedInput-root": { backgroundColor: "#fafafa" } }} />
             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
               <Button sx={{ color: "#64748b" }} onClick={() => setOpenNotes(false)}>CANCEL</Button>
-              <Button variant="contained" sx={{ bgcolor: "#d97706", '&:hover': { bgcolor: "#b45309" }, boxShadow: "none", fontWeight: "bold", px: 3 }} onClick={handleNotesSubmit}>
-                SAVE NOTE
-              </Button>
+              <Button variant="contained" sx={{ bgcolor: "#d97706" }} onClick={handleNotesSubmit}>SAVE NOTE</Button>
             </Box>
           </Box>
         </Box>
-      </Modal >
-    </Box >
+      </Modal>
+
+      {/* --- VIEW SINGLE NOMINEE MODAL --- */}
+      <Modal open={viewOpen} onClose={() => setViewOpen(false)}>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: 500 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>Nominee Details</Typography>
+            <IconButton onClick={() => setViewOpen(false)}><CloseIcon /></IconButton>
+          </Box>
+          <Divider sx={{ mb: 3 }} />
+          {selectedNominee && (
+            <Stack spacing={2}>
+              <Box><Typography variant="caption" color="text.secondary">Name</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_name || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">For Customer</Typography><Typography variant="body1" fontWeight={600} color="#004c8f">{selectedNominee.parent_customer_name || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Relationship</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_relation || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">ID / Aadhaar</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_id || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Contact</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_contact || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Email</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_email || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Bank Details</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.bank_details || "N/A"}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Notes</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_notes || "N/A"}</Typography></Box>
+            </Stack>
+          )}
+        </Box>
+      </Modal>
+
+    </Box>
   );
 };
 
