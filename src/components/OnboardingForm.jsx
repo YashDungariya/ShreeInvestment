@@ -102,16 +102,24 @@ const OnboardingForm = () => {
           data.append(key, formData[key] || ""); // Fallback to empty string if undefined
         }
       });
-
-      // Append files if they exist
+      // Customer files (Purana code)
       if (files.idProof) data.append("idProof", files.idProof);
       if (files.photo) data.append("photo", files.photo);
       if (files.panDoc) data.append("panDoc", files.panDoc);
       if (files.bankDoc) data.append("bankDoc", files.bankDoc);
-      if (files.nomineeIdProof) data.append("nomineeIdProof", files.nomineeIdProof);
-      if (files.nomineePhoto) data.append("nomineePhoto", files.nomineePhoto);
-      if (files.nomineePanDoc) data.append("nomineePanDoc", files.nomineePanDoc);
-      if (files.nomineeBankDoc) data.append("nomineeBankDoc", files.nomineeBankDoc);
+
+      // NOMINEE FILES - Naya Bullet-proof logic
+      if (files.nominees && files.nominees.length > 0) {
+        files.nominees.forEach((nomFileObj, index) => {
+          if (nomFileObj) {
+            // Bracket [] ki jagah underscore _ use kar rahe hain
+            if (nomFileObj.nomineeIdProof) data.append(`nomineeIdProof_${index}`, nomFileObj.nomineeIdProof);
+            if (nomFileObj.nomineePhoto) data.append(`nomineePhoto_${index}`, nomFileObj.nomineePhoto);
+            if (nomFileObj.nomineePanDoc) data.append(`nomineePanDoc_${index}`, nomFileObj.nomineePanDoc);
+            if (nomFileObj.nomineeBankDoc) data.append(`nomineeBankDoc_${index}`, nomFileObj.nomineeBankDoc);
+          }
+        });
+      }
 
       // Log FormData contents to Console for debugging (F12 -> Console me dekhein)
       console.log("--- Sending Data to Backend ---");
