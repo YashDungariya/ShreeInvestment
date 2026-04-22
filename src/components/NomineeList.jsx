@@ -276,25 +276,68 @@ const NomineeList = () => {
         </Box>
       </Modal>
 
+   {/* --- VIEW SINGLE NOMINEE MODAL --- */}
       {/* --- VIEW SINGLE NOMINEE MODAL --- */}
       <Modal open={viewOpen} onClose={() => setViewOpen(false)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: 500 }, bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none" }}>
+        <Box sx={{ 
+            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
+            width: { xs: "95%", sm: 800 }, 
+            minHeight: { sm: 400 },
+            bgcolor: "background.paper", borderRadius: 3, boxShadow: 24, p: 4, outline: "none" 
+        }}>
+          
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f" }}>Nominee Details</Typography>
-            <IconButton onClick={() => setViewOpen(false)}><CloseIcon /></IconButton>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f", fontSize: "1.25rem" }}>Nominee Details</Typography>
+            <IconButton onClick={() => setViewOpen(false)} sx={{ bgcolor: "#f1f5f9" }}><CloseIcon /></IconButton>
           </Box>
-          <Divider sx={{ mb: 3 }} />
+          <Divider sx={{ mb: 4 }} />
+
           {selectedNominee && (
-            <Stack spacing={2}>
-              <Box><Typography variant="caption" color="text.secondary">Name</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_name || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">For Customer</Typography><Typography variant="body1" fontWeight={600} color="#004c8f">{selectedNominee.parent_customer_name || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Relationship</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_relation || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">ID / Aadhaar</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_id || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Contact</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_contact || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Email</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_email || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Bank Details</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.bank_details || "N/A"}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Notes</Typography><Typography variant="body1" fontWeight={600}>{selectedNominee.nominee_notes || "N/A"}</Typography></Box>
-            </Stack>
+            <Grid container spacing={4}>
+              
+              {/* --- LINE 1 (3 Items) --- */}
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Name</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 700, mt: 0.5 }}>{selectedNominee.nominee_name || "N/A"}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>For Customer</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 700, mt: 0.5, color: "#004c8f" }}>{selectedNominee.parent_customer_name || "N/A"}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Relationship</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>{selectedNominee.nominee_relation || "N/A"}</Typography>
+              </Grid>
+
+              {/* --- LINE 2 (3 Items) --- */}
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>ID / Aadhaar</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>{selectedNominee.nominee_id || "N/A"}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Contact Number</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>{selectedNominee.nominee_contact || "N/A"}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Email ID</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>{selectedNominee.nominee_email || "N/A"}</Typography>
+              </Grid>
+
+              {/* --- LINE 3 (Bache hue 2 Items - Bank aur Notes) --- */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Bank Details</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5, bgcolor: "#f8fafc", p: 1.5, borderRadius: 1, border: "1px solid #f1f5f9" }}>
+                  {selectedNominee.bank_details || "N/A"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: "bold", textTransform: "uppercase" }}>Notes</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5, color: "#d97706", bgcolor: "#fffbeb", p: 1.5, borderRadius: 1, border: "1px solid #fef3c7" }}>
+                  {selectedNominee.nominee_notes || "No additional notes."}
+                </Typography>
+              </Grid>
+              
+            </Grid>
           )}
         </Box>
       </Modal>
