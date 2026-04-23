@@ -27,10 +27,17 @@ const AdminDashboard = () => {
       const res = await axios.get(`${API_BASE}get_customers.php`);
       const data = res.data;
 
-      // Calculate counts
+      // Calculate Total Customers (yeh theek hai)
       const customersCount = data.length;
-      // Nominee exists if nominee_name is not empty
-      const nomineesCount = data.filter(c => c.nominee_name && c.nominee_name.trim() !== "").length;
+
+      // Calculate Total Nominees (NAYA LOGIC)
+      let nomineesCount = 0;
+      data.forEach(customer => {
+        // Check agar 'nominees' array exist karta hai aur empty nahi hai
+        if (customer.nominees && Array.isArray(customer.nominees)) {
+          nomineesCount += customer.nominees.length;
+        }
+      });
 
       setStats({
         totalCustomers: customersCount,
