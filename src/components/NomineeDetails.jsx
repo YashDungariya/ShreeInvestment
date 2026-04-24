@@ -136,33 +136,8 @@ const NomineeDetails = ({ formData, handleNomineeChange, addNominee, removeNomin
                 sx={InputStyle}
               />
             </Box>
-            <Box sx={{ flex: 1, minWidth: "300px" }}>
-              <Typography sx={LabelStyle}>Bank Details (Cheque / Passbook)</Typography>
-              <TextField
-                placeholder="Account No, IFSC, Bank Name"
-                name="bankDetails"
-                value={nominee.bankDetails || ""}
-                onChange={(e) => handleNomineeChange(index, e)}
-                size="small"
-                sx={InputStyle}
-              />
-            </Box>
+           
           </Stack>
-
-          {/* Row 4 */}
-          <Box sx={{ width: "100%" }}>
-            <Typography sx={LabelStyle}>Nominee Dynamic Notes</Typography>
-            <TextField
-              multiline
-              minRows={3}
-              placeholder="Enter additional information about nominee here..."
-              name="nomineeNotes"
-              value={nominee.nomineeNotes || ""}
-              onChange={(e) => handleNomineeChange(index, e)}
-              size="small"
-              sx={InputStyle}
-            />
-          </Box>
         </Paper>
       ))}
     </Box>

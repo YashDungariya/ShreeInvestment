@@ -52,7 +52,8 @@ const CustomerList = () => {
     return (
       item.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.phone?.includes(searchTerm) ||
-      item.aadhar_number?.includes(searchTerm)
+      item.aadhar_number?.includes(searchTerm) ||
+      item.pan_number?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -211,7 +212,7 @@ const CustomerList = () => {
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Search by Name, Phone, or Aadhaar..."
+          placeholder="Search by Name, Phone, Aadhaar, or PAN..."
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
