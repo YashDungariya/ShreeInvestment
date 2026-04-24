@@ -368,8 +368,6 @@ const CustomerList = () => {
                       <InfoBox label="Nominee ID" value={nominee.nominee_id} />
                       <InfoBox label="Contact" value={nominee.nominee_contact} />
                       <InfoBox label="Email" value={nominee.nominee_email} />
-                      <InfoBox label="Bank Details" value={nominee.bank_details} />
-                      <Box sx={{ width: "100%" }}><InfoBox label="Notes" value={nominee.nominee_notes} /></Box>
                     </Box>
 
                     <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: '#64748b', mb: 1, mt: 2 }}>

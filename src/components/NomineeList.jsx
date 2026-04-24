@@ -36,7 +36,7 @@ const NomineeList = () => {
   // Add Nominee State (Array to support multiple)
   const [addCustomerPhone, setAddCustomerPhone] = useState("");
   const [newNominees, setNewNominees] = useState([{
-    nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "", bankDetails: "", nomineeNotes: ""
+    nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: ""
   }]);
 
   const API_BASE = "https://shreeinvestment.in/api/";
@@ -90,7 +90,7 @@ const NomineeList = () => {
     setEditData({
       id: nominee.id, nominee_name: nominee.nominee_name || "", nominee_relation: nominee.nominee_relation || "",
       nominee_id: nominee.nominee_id || "", nominee_contact: nominee.nominee_contact || "", bank_details: nominee.bank_details || "",
-      nominee_email: nominee.nominee_email || "", nominee_notes: nominee.nominee_notes || "",
+      nominee_email: nominee.nominee_email || "",
     });
     setOpenEdit(true);
   };
@@ -122,7 +122,7 @@ const NomineeList = () => {
   // --- ADD NEW NOMINEE LOGIC ---
   const handleAddOpen = () => {
     setAddCustomerPhone("");
-    setNewNominees([{ nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "", bankDetails: "", nomineeNotes: "" }]);
+    setNewNominees([{ nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "" }]);
     setAddOpen(true);
   };
 
@@ -133,7 +133,7 @@ const NomineeList = () => {
   };
 
   const addAnotherNominee = () => {
-    setNewNominees([...newNominees, { nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "", bankDetails: "", nomineeNotes: "" }]);
+    setNewNominees([...newNominees, { nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "" }]);
   };
 
   const removeNewNominee = (index) => {
