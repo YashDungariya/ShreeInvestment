@@ -8,8 +8,6 @@ import {
   Paper,
   CircularProgress,
   Backdrop,
-  IconButton,
-  Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
@@ -19,12 +17,22 @@ import DocumentUpload from "./DocumentUpload";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+const API_BASE = "https://shreeinvestment.in/api/";
 const steps = ["Customer Details", "Nominee & Bank", "Upload Documents"];
+
+const emptyNominee = () => ({
+  nomineeName: "",
+  nomineeRelation: "",
+  nomineeId: "",
+  nomineeContact: "",
+  nomineeEmail: "",
+});
 
 const OnboardingForm = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     customerName: "",
     motherName: "",
@@ -34,223 +42,197 @@ const OnboardingForm = () => {
     panNumber: "",
     birthPlace: "",
     notes: "",
-    nominees: [
-      {
-        nomineeName: "",
-        nomineeRelation: "",
-        nomineeId: "",
-        nomineeContact: "",
-        nomineeEmail: "",
-        bankDetails: "",
-        nomineeNotes: ""
-      }
-    ],
+    nominees: [emptyNominee()],
   });
-  // 1. Apni state ko update karein:
+
   const [files, setFiles] = useState({
     idProof: null,
     photo: null,
     panDoc: null,
     bankDoc: null,
-    nominees: [] // Nominee files yahan aayengi
+    nominees: [],
   });
 
- // 2. Naya Handler banayein SPECIFICALLY nominee files ke liye
-  const handleNomineeFileChange = (e, fieldName, nomineeIndex) => {
-    // Array ki deep copy banayein
-    const updatedNomineeFiles = [...files.nominees];
-
-    // Agar us index pe koi object nahi hai, toh empty object initialize karo
-    if (!updatedNomineeFiles[nomineeIndex]) {
-      updatedNomineeFiles[nomineeIndex] = {};
-    }
-
-    // File ko us specific index aur field me save karo
-    updatedNomineeFiles[nomineeIndex][fieldName] = e.target.files[0];
-
-    // State update karo
-    setFiles({ ...files, nominees: updatedNomineeFiles });
-  };
-  // 3. purana handler waise ka waisa rakhne dein (sirf Customer ke liye)
-  const handleFileChange = (e, fieldName) => {
-    setFiles({ ...files, [fieldName]: e.target.files[0] });
-  };
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleNomineeChange = (index, e) => {
-    const updatedNominees = [...formData.nominees];
-    updatedNominees[index][e.target.name] = e.target.value;
-    setFormData({ ...formData, nominees: updatedNominees });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      nominees: prev.nominees.map((nom, i) =>
+        i === index ? { ...nom, [name]: value } : nom
+      ),
+    }));
   };
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  // const handleFileChange = (e, fieldName) =>
-  //   setFiles({ ...files, [fieldName]: e.target.files[0] });
+
+  const handleFileChange = (e, fieldName) => {
+    const file = e.target.files?.[0] || null;
+    setFiles((prev) => ({ ...prev, [fieldName]: file }));
+  };
+
+  const handleNomineeFileChange = (e, fieldName, nomineeIndex) => {
+    const file = e.target.files?.[0] || null;
+    setFiles((prev) => {
+      const updated = [...prev.nominees];
+      updated[nomineeIndex] = { ...(updated[nomineeIndex] || {}), [fieldName]: file };
+      return { ...prev, nominees: updated };
+    });
+  };
+
+  const addNominee = () => {
+    setFormData((prev) => ({
+      ...prev,
+      nominees: [...prev.nominees, emptyNominee()],
+    }));
+  };
+
+  const removeNominee = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      nominees: prev.nominees.filter((_, i) => i !== index),
+    }));
+    setFiles((prev) => ({
+      ...prev,
+      nominees: prev.nominees.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
-  const saveToBackend = async (isFinalStep = false) => {
-    setLoading(true); // Loading Start
+  const validateStep = (step) => {
+    if (step === 0) {
+      if (!formData.customerName.trim()) {
+        Swal.fire("Required", "Customer name is required.", "warning");
+        return false;
+      }
+      if (!formData.phone.trim()) {
+        Swal.fire("Required", "Phone number is required.", "warning");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateStep(activeStep)) return;
+    setActiveStep((prev) => prev + 1);
+  };
+
+  const buildFormData = (confirmDuplicate) => {
+    const data = new FormData();
+
+    Object.keys(formData).forEach((key) => {
+      if (key === "nominees") {
+        const arr = Array.isArray(formData.nominees) ? formData.nominees : [];
+        data.append("nominees", JSON.stringify(arr));
+      } else {
+        data.append(key, formData[key] ?? "");
+      }
+    });
+
+    if (confirmDuplicate) data.append("confirmDuplicate", "1");
+
+    if (files.idProof) data.append("idProof", files.idProof);
+    if (files.photo) data.append("photo", files.photo);
+    if (files.panDoc) data.append("panDoc", files.panDoc);
+    if (files.bankDoc) data.append("bankDoc", files.bankDoc);
+
+    (files.nominees || []).forEach((nomFiles, index) => {
+      if (!nomFiles || typeof nomFiles !== "object") return;
+      if (nomFiles.nomineeIdProof)
+        data.append(`nomineeIdProof_${index}`, nomFiles.nomineeIdProof);
+      if (nomFiles.nomineePhoto)
+        data.append(`nomineePhoto_${index}`, nomFiles.nomineePhoto);
+      if (nomFiles.nomineePanDoc)
+        data.append(`nomineePanDoc_${index}`, nomFiles.nomineePanDoc);
+      if (nomFiles.nomineeBankDoc)
+        data.append(`nomineeBankDoc_${index}`, nomFiles.nomineeBankDoc);
+    });
+
+    return data;
+  };
+
+  const submitApplication = async (confirmDuplicate = false) => {
+    if (loading) return false;
+    setLoading(true);
 
     try {
-      const data = new FormData();
-
-      // Convert Nominees array to JSON string safely
-      Object.keys(formData).forEach((key) => {
-        if (key === "nominees") {
-          // Verify it's an array before stringifying
-          const nomineesArray = Array.isArray(formData[key]) ? formData[key] : [];
-          data.append(key, JSON.stringify(nomineesArray));
-        } else {
-          data.append(key, formData[key] || ""); // Fallback to empty string if undefined
-        }
-      });
-      // Customer files (Purana code)
-      if (files.idProof) data.append("idProof", files.idProof);
-      if (files.photo) data.append("photo", files.photo);
-      if (files.panDoc) data.append("panDoc", files.panDoc);
-      if (files.bankDoc) data.append("bankDoc", files.bankDoc);
-
-      // NOMINEE FILES - Bullet-proof logic
-      if (files.nominees && Array.isArray(files.nominees)) {
-        files.nominees.forEach((nomFileObj, index) => {
-          // Check karo ki object exist karta hai
-          if (nomFileObj && typeof nomFileObj === 'object') {
-            if (nomFileObj.nomineeIdProof) data.append(`nomineeIdProof_${index}`, nomFileObj.nomineeIdProof);
-            if (nomFileObj.nomineePhoto) data.append(`nomineePhoto_${index}`, nomFileObj.nomineePhoto);
-            if (nomFileObj.nomineePanDoc) data.append(`nomineePanDoc_${index}`, nomFileObj.nomineePanDoc);
-            if (nomFileObj.nomineeBankDoc) data.append(`nomineeBankDoc_${index}`, nomFileObj.nomineeBankDoc);
-          }
-        });
-      }
-
-      // Log FormData contents to Console for debugging (F12 -> Console me dekhein)
-      console.log("--- Sending Data to Backend ---");
-      for (let pair of data.entries()) {
-        console.log(pair[0] + ', ' + pair[1]);
-      }
-
       const res = await axios.post(
-        "https://shreeinvestment.in/api/submit_form.php",
-        data
+        `${API_BASE}submit_form.php`,
+        buildFormData(confirmDuplicate)
       );
 
-      setLoading(false); // Stop loading when response arrives
+      setLoading(false);
 
-      if (res.data && res.data.status === "success") {
+      if (res.data?.status === "success") {
         await Swal.fire({
           icon: "success",
-          title: isFinalStep ? "Success!" : "Data Saved!",
-          text: isFinalStep ? "Application submitted successfully." : "Progress recorded.",
+          title: "Saved",
+          text: "The application was submitted successfully.",
           timer: 1500,
           showConfirmButton: false,
         });
-        if (isFinalStep) {
-          navigate("/customer-list");
-        }
+        navigate("/customer-list");
         return true;
-      } else {
-        // Backend returned an error response
-        console.error("Backend Error Response:", res.data);
-        Swal.fire({
-          icon: "error",
-          title: "Server Error",
-          text: res.data?.message || "Failed to save data. Check console."
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Not Saved",
+        text: res.data?.message || "Unable to save the record. Please try again.",
+      });
+      return false;
+    } catch (err) {
+      setLoading(false);
+
+      const resp = err.response;
+      if (resp?.status === 409 && resp.data?.status === "duplicate_warning") {
+        const existing = Array.isArray(resp.data.existing) ? resp.data.existing : [];
+        const listHtml = existing
+          .map(
+            (c) =>
+              `<li style="margin-bottom:6px"><b>${c.customer_name || "-"}</b>` +
+              `<br/><small>PAN: ${c.pan_number || "N/A"} &nbsp;|&nbsp; Registered: ${
+                c.created_at ? String(c.created_at).slice(0, 10) : "N/A"
+              }</small></li>`
+          )
+          .join("");
+
+        const confirm = await Swal.fire({
+          icon: "warning",
+          title: "Duplicate Phone Number",
+          html:
+            `<p style="text-align:left;margin-bottom:8px">The number ` +
+            `<b>${formData.phone}</b> is already registered to the following ` +
+            `${existing.length === 1 ? "customer" : "customers"}:</p>` +
+            `<ul style="text-align:left;padding-left:20px">${listHtml}</ul>` +
+            `<p style="text-align:left;margin-top:12px">If this applicant is a ` +
+            `different member of the same household, select <b>Continue</b>. ` +
+            `Otherwise, cancel and verify the number.</p>`,
+          showCancelButton: true,
+          confirmButtonText: "Continue Anyway",
+          cancelButtonText: "Cancel",
+          confirmButtonColor: "#004c8f",
+          width: 600,
         });
+
+        if (confirm.isConfirmed) {
+          return submitApplication(true);
+        }
         return false;
       }
-    } catch (err) {
-      setLoading(false); // Stop loading if request crashes
-      console.error("Axios/Network Error:", err);
 
-      // Better error message
-      let errorMsg = "Connection failed. Please check your internet or CORS policy.";
-      if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        errorMsg = `Server error: ${err.response.status} - ${err.response.data?.message || err.message}`;
+      let msg = "Unable to reach the server. Please check your connection.";
+      if (resp) {
+        msg = resp.data?.message || `Server error (${resp.status}).`;
       }
-
-      Swal.fire({ icon: "error", title: "Error", text: errorMsg });
+      Swal.fire({ icon: "error", title: "Error", text: msg });
       return false;
     }
   };
 
-  const handleNext = async () => {
-    // Add basic validation
-    if (activeStep === 0) {
-      if (!formData.customerName || !formData.phone) {
-        Swal.fire("Wait!", "Name and Phone are required.", "warning");
-        return;
-      }
-    }
-
-    // Call the backend and wait for result
-    const isSuccess = await saveToBackend(false);
-
-    // ONLY move to next step if save was successful
-    if (isSuccess) {
-      setActiveStep((prev) => prev + 1);
-    }
-  };
-
-  // const saveToBackend = async (isFinalStep = false) => {
-  //   setLoading(true);
-  //   const data = new FormData();
-  //   Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-  //   if (files.idProof) data.append("idProof", files.idProof);
-  //   if (files.photo) data.append("photo", files.photo);
-  //   if (files.panDoc) data.append("panDoc", files.panDoc);
-  //   if (files.bankDoc) data.append("bankDoc", files.bankDoc);
-
-  //   try {
-  //     const res = await axios.post(
-  //       "https://shreeinvestment.in/api/submit_form.php",
-  //       data,
-  //     );
-  //     if (res.data.status === "success") {
-  //       setLoading(false);
-  //       await Swal.fire({
-  //         icon: "success",
-  //         title: isFinalStep ? "Success!" : "Data Saved!",
-  //         text: isFinalStep
-  //           ? "Application submitted successfully."
-  //           : "Progress recorded.",
-  //         timer: 1500,
-  //         showConfirmButton: false,
-  //       });
-  //       if (isFinalStep) {
-  //         // Success ke baad seedha listing par redirect kar sakte hain
-  //         navigate("/customer-list");
-  //       }
-  //       return true;
-  //     }
-  //   } catch (err) {
-  //     setLoading(false);
-  //     Swal.fire({ icon: "error", title: "Error", text: "Connection failed." });
-  //     return false;
-  //   }
-  // };
-  const addNominee = () => {
-    setFormData({
-      ...formData,
-      nominees: [
-        ...formData.nominees,
-        { nomineeName: "", nomineeRelation: "", nomineeId: "", nomineeContact: "", nomineeEmail: "", bankDetails: "", nomineeNotes: "" }
-      ]
-    });
-  };
-
-  // Function to remove a nominee block
-  const removeNominee = (index) => {
-    const updatedNominees = formData.nominees.filter((_, i) => i !== index);
-    setFormData({ ...formData, nominees: updatedNominees });
-  };
-  // const handleNext = async () => {
-  //   if (activeStep === 0 && (!formData.customerName || !formData.phone)) {
-  //     Swal.fire("Wait!", "Name and Phone are required.", "warning");
-  //     return;
-  //   }
-  //   if (await saveToBackend(false)) setActiveStep((prev) => prev + 1);
-  // };
+  const isLastStep = activeStep === steps.length - 1;
 
   return (
     <Box>
@@ -258,7 +240,6 @@ const OnboardingForm = () => {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      {/* --- Back Arrow Header (Updated to navigate to listing) --- */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -285,7 +266,6 @@ const OnboardingForm = () => {
           {activeStep === 1 && (
             <NomineeDetails
               formData={formData}
-              // YOU WERE MISSING THESE THREE PROPS:
               handleNomineeChange={handleNomineeChange}
               addNominee={addNominee}
               removeNominee={removeNominee}
@@ -294,28 +274,23 @@ const OnboardingForm = () => {
           {activeStep === 2 && (
             <DocumentUpload
               handleFileChange={handleFileChange}
-              handleNomineeFileChange={handleNomineeFileChange} // NAYA: Multiple files handle karne ke liye
+              handleNomineeFileChange={handleNomineeFileChange}
               files={files}
-              nomineesData={formData.nominees} // NAYA: Nominees ki ginti batane ke liye
+              nomineesData={formData.nominees}
             />
           )}
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-          <Button disabled={activeStep === 0} onClick={handleBack}>
+          <Button disabled={activeStep === 0 || loading} onClick={handleBack}>
             Back
           </Button>
           <Button
             variant="contained"
-            onClick={
-              activeStep === steps.length - 1
-                ? () => saveToBackend(true)
-                : handleNext
-            }
+            disabled={loading}
+            onClick={isLastStep ? () => submitApplication(false) : handleNext}
           >
-            {activeStep === steps.length - 1
-              ? "Finish & Submit"
-              : "Save & Next"}
+            {isLastStep ? "Finish & Submit" : "Save & Next"}
           </Button>
         </Box>
       </Paper>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Checkbox, IconButton, Stack, Modal, Typography, Divider, TextField,
-  InputAdornment, Grid, TablePagination
+  InputAdornment, Grid, TablePagination, Chip
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -42,11 +42,26 @@ const CustomerList = () => {
   const fetchData = async () => {
     try {
       const res = await axios.get(`${API_BASE}get_customers.php`);
-      setCustomers(res.data);
+      setCustomers(Array.isArray(res.data) ? res.data : res.data?.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load customers:", err);
+      setCustomers([]);
+      Swal.fire("Error", "Unable to load the customer list.", "error");
     }
   };
+
+  const normalizePhone = (p) => {
+    const d = String(p || "").replace(/\D+/g, "");
+    return d.length > 10 ? d.slice(-10) : d;
+  };
+
+  const phoneCounts = customers.reduce((acc, c) => {
+    const key = normalizePhone(c.phone);
+    if (key) acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const isSharedPhone = (phone) => (phoneCounts[normalizePhone(phone)] || 0) > 1;
 
   const filteredCustomers = customers.filter((item) => {
     return (
@@ -78,14 +93,14 @@ const CustomerList = () => {
     try {
       const res = await axios.post(`${API_BASE}update_customer.php`, payload);
       if (res.data.status === "success") {
-        Swal.fire("Updated!", "Customer notes saved successfully.", "success");
+        Swal.fire("Saved", "Customer notes saved successfully.", "success");
         setOpenNotes(false);
         fetchData();
       } else {
-        Swal.fire("Error", res.data.message || "Failed to save notes", "error");
+        Swal.fire("Error", res.data.message || "Unable to save the notes.", "error");
       }
     } catch (err) {
-      Swal.fire("Error", "Server error while saving notes.", "error");
+      Swal.fire("Error", "A server error occurred while saving the notes.", "error");
     }
   };
 
@@ -103,34 +118,19 @@ const CustomerList = () => {
       try {
         const res = await axios.post(`${API_BASE}delete_customers.php`, { ids: idsToDelete });
         if (res.data.status === "success") {
-          Swal.fire("Deleted!", "Success", "success");
+          Swal.fire("Deleted", "The selected records were deleted successfully.", "success");
           setSelectedIds([]);
           fetchData();
         }
       } catch (err) {
-        Swal.fire("Error", "Action failed", "error");
+        Swal.fire("Error", "Unable to delete the selected records.", "error");
       }
     }
   };
 
-  // NAYA: Handle Open Modal - Ab ye backend se full data with nominees fetch karega
-  const handleOpenModal = async (customer) => {
-    try {
-      const res = await axios.get(`${API_BASE}get_customer.php?phone=${customer.phone}`);
-      if (res.data.status === "success") {
-        setSelectedCustomer(res.data.data); // data contains customer + nominees array
-        setOpen(true);
-      } else {
-        // Fallback if full data not found
-        setSelectedCustomer(customer);
-        setOpen(true);
-      }
-    } catch (err) {
-      console.error(err);
-      // Fallback in case of error
-      setSelectedCustomer(customer);
-      setOpen(true);
-    }
+  const handleOpenModal = (customer) => {
+    setSelectedCustomer(customer);
+    setOpen(true);
   };
 
   const handleOpenEditModal = (customer) => {
@@ -158,14 +158,14 @@ const CustomerList = () => {
     try {
       const res = await axios.post(`${API_BASE}update_customer.php`, payload);
       if (res.data.status === "success") {
-        Swal.fire("Updated!", "Customer details updated successfully.", "success");
+        Swal.fire("Saved", "Customer details updated successfully.", "success");
         setOpenEdit(false);
         fetchData();
       } else {
-        Swal.fire("Error", res.data.message || "Failed to update", "error");
+        Swal.fire("Error", res.data.message || "Unable to update the customer.", "error");
       }
     } catch (err) {
-      Swal.fire("Error", "Server error while updating.", "error");
+      Swal.fire("Error", "A server error occurred while updating.", "error");
     }
   };
 
@@ -221,7 +221,7 @@ const CustomerList = () => {
             "& .MuiOutlinedInput-root": {
               borderRadius: "4px",
               "& fieldset": { borderColor: "#cbd5e1" },
-              "&:hover fieldset": { borderColor: "#004c8f" }, // YAHAN CHANGE KIYA HAI
+              "&:hover fieldset": { borderColor: "#004c8f" },
             },
           }}
           InputProps={{
@@ -268,7 +268,24 @@ const CustomerList = () => {
                     </TableCell>
                     <TableCell sx={{ color: "#64748b" }}>{actualIndex}</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>{row.customer_name}</TableCell>
-                    <TableCell>{row.phone}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {row.phone}
+                        {isSharedPhone(row.phone) && (
+                          <Chip
+                            label="Shared"
+                            size="small"
+                            sx={{
+                              height: 18,
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              bgcolor: "#fef3c7",
+                              color: "#92400e",
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>{row.pan_number || "---"}</TableCell>
                     <TableCell>{row.aadhar_number || "---"}</TableCell>
                     <TableCell align="center">
@@ -313,7 +330,6 @@ const CustomerList = () => {
         />
       </Paper>
 
-      {/* --- NAYA VIEW MODAL (MULTIPLE NOMINEES KE SAATH) --- */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", md: 850 }, bgcolor: "#fff", borderRadius: 4, boxShadow: "0 25px 50px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto", outline: "none" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 3, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc" }}>
@@ -322,7 +338,6 @@ const CustomerList = () => {
           </Box>
           {selectedCustomer && (
             <Box sx={{ p: 4 }}>
-              {/* 1. PERSONAL DETAILS */}
               <Typography variant="subtitle2" sx={{ color: "#004c8f", fontWeight: 900, mb: 3, pb: 1, borderBottom: "2px solid #e2e8f0", display: "inline-block" }}>
                 1. PERSONAL DETAILS
               </Typography>
@@ -337,7 +352,6 @@ const CustomerList = () => {
                 <Box sx={{ width: "100%" }}><InfoBox label="Customer Notes" value={selectedCustomer.notes} /></Box>
               </Box>
 
-              {/* 2. CUSTOMER KYC DOCUMENTS */}
               <Typography variant="subtitle2" sx={{ color: "#2e7d32", fontWeight: 900, mb: 3, pb: 1, borderBottom: "2px solid #e2e8f0", display: "inline-block" }}>
                 2. CUSTOMER KYC DOCUMENTS
               </Typography>
@@ -352,7 +366,6 @@ const CustomerList = () => {
                 )}
               </Stack>
 
-              {/* 3. NOMINEE LIST (MAPPED) */}
               <Typography variant="subtitle2" sx={{ color: "#ff8c00", fontWeight: 900, mb: 3, pb: 1, borderBottom: "2px solid #e2e8f0", display: "inline-block" }}>
                 3. NOMINEE DETAILS
               </Typography>
@@ -393,9 +406,7 @@ const CustomerList = () => {
         </Box>
       </Modal>
 
-      {/* Edit & Notes Modals (Unchanged) */}
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
-        {/* ... Same Edit Modal Code as you had ... */}
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: "85%", md: 900 }, bgcolor: "#fff", boxShadow: "0 25px 50px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto", outline: "none" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc" }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#004c8f", fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Edit Customer Details</Typography>
@@ -403,13 +414,13 @@ const CustomerList = () => {
           </Box>
           <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Customer Name *" name="customer_name" value={editData.customer_name || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Mother's Name *" name="mother_name" value={editData.mother_name || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Email ID" name="email" value={editData.email || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Aadhaar Number *" name="aadhar_number" value={editData.aadhar_number || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="PAN Number *" name="pan_number" value={editData.pan_number || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Phone Number *" name="phone" value={editData.phone || ""} onChange={handleEditChange} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Birth Place" name="birth_place" value={editData.birth_place || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Customer Name *" name="customer_name" value={editData.customer_name || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Mother's Name *" name="mother_name" value={editData.mother_name || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Email ID" name="email" value={editData.email || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Aadhaar Number *" name="aadhar_number" value={editData.aadhar_number || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="PAN Number *" name="pan_number" value={editData.pan_number || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Phone Number *" name="phone" value={editData.phone || ""} onChange={handleEditChange} /></Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}><TextField fullWidth label="Birth Place" name="birth_place" value={editData.birth_place || ""} onChange={handleEditChange} /></Grid>
             </Grid>
             <Box sx={{ width: "100%", mt: { xs: 2, sm: 3 } }}>
               <TextField fullWidth multiline minRows={3} maxRows={5} label="Dynamic Notes" name="notes" value={editData.notes || ""} onChange={handleEditChange} />
@@ -423,7 +434,6 @@ const CustomerList = () => {
       </Modal>
 
       <Modal open={openNotes} onClose={() => setOpenNotes(false)}>
-        {/* ... Same Notes Modal Code as you had ... */}
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: { xs: "95%", sm: "85%", md: 900 }, minHeight: { md: "60vh" }, bgcolor: "#fff", boxShadow: "0 25px 50px rgba(0,0,0,0.2)", outline: "none", display: "flex", flexDirection: "column" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: { xs: 2, sm: 3 }, borderBottom: "1px solid #f1f5f9", bgcolor: "#fffbeb" }}>
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#d97706", display: 'flex', alignItems: 'center', gap: 1 }}><NoteAltIcon /> Customer Notes</Typography>
